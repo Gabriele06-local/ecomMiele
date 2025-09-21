@@ -1,16 +1,25 @@
 // Configurazione Supabase Client
 import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2'
 
-// Configurazione Supabase
-const supabaseUrl = 'https://roagnpympvjkbqbtmtnt.supabase.co' // Sostituire con l'URL del progetto Supabase
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvYWducHltcHZqa2JxYnRtdG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTMyNDIsImV4cCI6MjA3NDAyOTI0Mn0.QROghbzXqTwweLnIQ1JIWVhNnraQ2sHV5MvbDlPLZtk' // Sostituire con la chiave anonima
+// Configurazione Supabase - Usa variabili d'ambiente o fallback
+const supabaseUrl = window.location.hostname === 'localhost' 
+  ? 'https://roagnpympvjkbqbtmtnt.supabase.co'  // Fallback per sviluppo locale
+  : 'https://roagnpympvjkbqbtmtnt.supabase.co'  // URL del tuo progetto Supabase
+
+const supabaseAnonKey = window.location.hostname === 'localhost'
+  ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvYWducHltcHZqa2JxYnRtdG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTMyNDIsImV4cCI6MjA3NDAyOTI0Mn0.QROghbzXqTwweLnIQ1JIWVhNnraQ2sHV5MvbDlPLZtk'
+  : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvYWducHltcHZqa2JxYnRtdG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTMyNDIsImV4cCI6MjA3NDAyOTI0Mn0.QROghbzXqTwweLnIQ1JIWVhNnraQ2sHV5MvbDlPLZtk'
+
+console.log('🔧 Supabase URL:', supabaseUrl)
+console.log('🔑 Supabase Key:', supabaseAnonKey.substring(0, 20) + '...')
 
 // Creazione del client Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: false,  // Cambiato a false per evitare problemi
+    flowType: 'pkce'  // Usa PKCE flow per sicurezza
   }
 })
 

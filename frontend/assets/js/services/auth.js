@@ -14,16 +14,29 @@ export const AuthError = {
 // Funzione per ottenere l'utente corrente
 export async function getCurrentUser() {
   try {
+    // Prima prova a ottenere la sessione
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError) {
+      console.warn('Nessuna sessione attiva:', sessionError.message)
+      return null
+    }
+    
+    if (session?.user) {
+      return session.user
+    }
+    
+    // Se non c'è sessione, prova a ottenere l'utente direttamente
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error) {
-      console.error('Errore nel recupero utente:', error)
+      console.warn('Errore nel recupero utente:', error.message)
       return null
     }
     
     return user
   } catch (error) {
-    console.error('Errore nel recupero utente:', error)
+    console.warn('Errore nel recupero utente:', error.message)
     return null
   }
 }
