@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordine Completato - Miele d'Autore</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <div class="navbar-brand">
+                    <a href="index.html">
+                        <img src="assets/images/logo.svg" alt="Miele d'Autore" class="logo">
+                        <span>Miele d'Autore</span>
+                    </a>
+                </div>
+                <div class="navbar-menu">
+                    <a href="index.html">Home</a>
+                    <a href="product.html">Prodotti</a>
+                    <a href="cart.html">Carrello</a>
+                    <a href="profile.html" id="profileLink" style="display: none;">Profilo</a>
+                    <a href="login.html" id="loginLink">Accedi</a>
+                    <button id="logoutBtn" style="display: none;" class="btn btn-outline">Esci</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Verificando il tuo ordine...</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState" class="success-container" style="display: none;">
+                <div class="success-header">
+                    <div class="success-icon">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22,4 12,14.01 9,11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h1>🎉 Ordine Completato con Successo!</h1>
+                    <p class="success-subtitle">Grazie per aver scelto Miele d'Autore. Il tuo ordine è stato elaborato correttamente.</p>
+                </div>
+
+                <!-- Order Details -->
+                <div class="order-details-card">
+                    <h2>Dettagli del tuo Ordine</h2>
+                    
+                    <div class="order-info">
+                        <div class="order-number">
+                            <strong>Numero Ordine:</strong>
+                            <span id="orderNumber">-</span>
+                        </div>
+                        <div class="order-date">
+                            <strong>Data:</strong>
+                            <span id="orderDate">-</span>
+                        </div>
+                        <div class="order-total">
+                            <strong>Totale:</strong>
+                            <span id="orderTotal">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="order-items">
+                        <h3>Prodotti Ordinati</h3>
+                        <div id="orderItemsList">
+                            <!-- Items will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Shipping Info -->
+                    <div class="shipping-info">
+                        <h3>Informazioni di Spedizione</h3>
+                        <div id="shippingAddress">
+                            <!-- Address will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="next-steps">
+                    <h3>Cosa succede ora?</h3>
+                    <div class="steps-grid">
+                        <div class="step">
+                            <div class="step-icon">📧</div>
+                            <div class="step-content">
+                                <h4>Conferma Email</h4>
+                                <p>Riceverai una email di conferma con tutti i dettagli del tuo ordine.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">📦</div>
+                            <div class="step-content">
+                                <h4>Preparazione</h4>
+                                <p>Il tuo ordine verrà preparato con cura nei prossimi 1-2 giorni lavorativi.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">🚚</div>
+                            <div class="step-content">
+                                <h4>Spedizione</h4>
+                                <p>Ti invieremo il codice di tracking quando il pacco sarà in viaggio.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="profile.html" class="btn btn-primary">Visualizza i Tuoi Ordini</a>
+                    <a href="product.html" class="btn btn-outline">Continua lo Shopping</a>
+                    <a href="index.html" class="btn btn-outline">Torna alla Home</a>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-container" style="display: none;">
+                <div class="error-icon">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <h1>Errore nella Verifica dell'Ordine</h1>
+                <p id="errorMessage">Si è verificato un problema nella verifica del tuo ordine. Contattaci per assistenza.</p>
+                <div class="error-actions">
+                    <a href="profile.html" class="btn btn-primary">Controlla i Tuoi Ordini</a>
+                    <a href="index.html" class="btn btn-outline">Torna alla Home</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Miele d'Autore</h3>
+                    <p>Il miele più pregiato, direttamente dal produttore alla tua tavola.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Link Utili</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="product.html">Prodotti</a></li>
+                        <li><a href="profile.html">Il Mio Account</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Supporto</h4>
+                    <ul>
+                        <li><a href="mailto:info@mieledautore.com">info@mieledautore.com</a></li>
+                        <li><a href="tel:+39123456789">+39 123 456 789</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Miele d'Autore. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/services/supabaseClient.js"></script>
+    <script type="module" src="assets/js/services/auth.js"></script>
+    <script type="module" src="assets/js/utils/notifications.js"></script>
+    <script type="module" src="assets/js/pages/successPage.js"></script>
+</body>
+</html>

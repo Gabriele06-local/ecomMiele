@@ -1,4 +1,5 @@
 // Pagina carrello
+import { supabase } from '../services/supabaseClient.js'
 import { cartService, updateCartQuantity, removeFromCart, clearCart } from '../services/cart.js'
 import { getCurrentUser } from '../services/auth.js'
 
@@ -220,26 +221,20 @@ async function proceedToCheckout() {
       }))
     }
 
-    // Invia la richiesta di checkout
-    const response = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(checkoutData)
+    // Invia la richiesta di checkout usando Supabase Edge Function
+    const { data: result, error } = await supabase.functions.invoke('checkout', {
+      body: checkoutData
     })
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    if (error) {
+      throw new Error(error.message || 'Errore connessione checkout')
     }
 
-    const result = await response.json()
-
-    if (result.success && result.checkout_url) {
+    if (result && result.success && result.data?.checkout_url) {
       // Reindirizza a Stripe
-      window.location.href = result.checkout_url
+      window.location.href = result.data.checkout_url
     } else {
-      throw new Error(result.error || 'Errore checkout')
+      throw new Error(result?.error || 'Errore durante la creazione del checkout')
     }
   } catch (error) {
     console.error('Errore checkout:', error)

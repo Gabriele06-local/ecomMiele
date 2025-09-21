@@ -271,7 +271,58 @@
                                     <option value="in_corso">In Corso</option>
                                     <option value="spedito">Spedito</option>
                                     <option value="completato">Completato</option>
+                                    <option value="cancellato">Cancellato</option>
                                 </select>
+                                <select id="orderDateFilter" class="filter-select">
+                                    <option value="">Tutte le date</option>
+                                    <option value="today">Oggi</option>
+                                    <option value="week">Questa settimana</option>
+                                    <option value="month">Questo mese</option>
+                                </select>
+                                <input type="text" id="orderSearchInput" placeholder="Cerca ordine..." class="search-input">
+                                <button id="exportOrdersBtn" class="btn btn-outline">
+                                    <i class="fas fa-download"></i> Esporta
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Orders Stats -->
+                        <div class="orders-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon pending">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="pendingOrdersCount">0</h3>
+                                    <p>In Attesa</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon processing">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="processingOrdersCount">0</h3>
+                                    <p>In Corso</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon shipped">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="shippedOrdersCount">0</h3>
+                                    <p>Spediti</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon completed">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="completedOrdersCount">0</h3>
+                                    <p>Completati</p>
+                                </div>
                             </div>
                         </div>
                         
@@ -280,17 +331,21 @@
                                 <table class="admin-table" id="ordersTable">
                                     <thead>
                                         <tr>
-                                            <th>ID Ordine</th>
+                                            <th>
+                                                <input type="checkbox" id="selectAllOrders">
+                                            </th>
+                                            <th>Ordine</th>
                                             <th>Cliente</th>
                                             <th>Data</th>
                                             <th>Totale</th>
                                             <th>Stato</th>
+                                            <th>Pagamento</th>
                                             <th>Azioni</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ordersTableBody">
                                         <tr>
-                                            <td colspan="6" class="loading-cell">
+                                            <td colspan="8" class="loading-cell">
                                                 <div class="loading-spinner">
                                                     <i class="fas fa-spinner fa-spin"></i>
                                                     <p>Caricamento ordini...</p>
@@ -299,6 +354,22 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- Bulk Actions -->
+                            <div class="bulk-actions" id="bulkActions" style="display: none;">
+                                <span class="selected-count">0 ordini selezionati</span>
+                                <div class="bulk-buttons">
+                                    <button class="btn btn-outline" id="bulkMarkShipped">
+                                        <i class="fas fa-truck"></i> Segna come Spedito
+                                    </button>
+                                    <button class="btn btn-outline" id="bulkMarkCompleted">
+                                        <i class="fas fa-check"></i> Segna come Completato
+                                    </button>
+                                    <button class="btn btn-outline" id="bulkExport">
+                                        <i class="fas fa-download"></i> Esporta Selezionati
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

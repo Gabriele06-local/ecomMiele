@@ -3,14 +3,33 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createCorsResponse, handleCors } from '../_shared/cors.ts'
 import { supabase } from '../_shared/supabaseClient.ts'
 import { verifyWebhookSignature, retrieveCheckoutSession } from '../_shared/stripeClient.ts'
+import { sendOrderConfirmationEmail as sendOrderEmail, sendOrderStatusUpdateEmail } from '../_shared/emailService.ts'
 
 serve(async (req) => {
+  const startTime = Date.now()
+  let eventType = 'unknown'
+  
   try {
+    // Gestisci CORS preflight
+    const corsResponse = handleCors(req)
+    if (corsResponse) return corsResponse
+
     // Verifica il metodo HTTP
     if (req.method !== 'POST') {
+      console.warn('❌ Invalid method:', req.method)
       return createCorsResponse(
         { success: false, error: 'Method not allowed' },
         405
+      )
+    }
+
+    // Verifica rate limiting (semplice implementazione)
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+    if (!isRequestAllowed(clientIP)) {
+      console.warn('❌ Rate limit exceeded for IP:', clientIP)
+      return createCorsResponse(
+        { success: false, error: 'Rate limit exceeded' },
+        429
       )
     }
 
@@ -18,7 +37,17 @@ serve(async (req) => {
     const body = await req.text()
     const signature = req.headers.get('stripe-signature')
 
+    // Validazione input
+    if (!body || body.trim().length === 0) {
+      console.error('❌ Empty request body')
+      return createCorsResponse(
+        { success: false, error: 'Empty request body' },
+        400
+      )
+    }
+
     if (!signature) {
+      console.error('❌ Missing Stripe signature header')
       return createCorsResponse(
         { success: false, error: 'Missing stripe signature' },
         400
@@ -29,28 +58,56 @@ serve(async (req) => {
     let event
     try {
       event = verifyWebhookSignature(body, signature)
+      eventType = event.type
+      console.log(`🎯 Processing webhook event: ${eventType} (${event.id})`)
     } catch (error) {
-      console.error('Webhook signature verification failed:', error)
+      console.error('❌ Webhook signature verification failed:', error.message)
       return createCorsResponse(
         { success: false, error: 'Invalid signature' },
         400
       )
     }
 
-    console.log(`Processing webhook event: ${event.type}`)
+    // Verifica che l'evento non sia già stato processato (idempotenza)
+    const isAlreadyProcessed = await checkEventIdempotence(event.id)
+    if (isAlreadyProcessed) {
+      console.log(`✅ Event ${event.id} already processed, skipping`)
+      return createCorsResponse({
+        success: true,
+        message: 'Event already processed'
+      })
+    }
+
+    // Registra l'evento per idempotenza
+    await recordEventProcessing(event.id, eventType)
 
     // Gestisci l'evento
-    await handleWebhookEvent(event)
+    const result = await handleWebhookEvent(event)
+    
+    const processingTime = Date.now() - startTime
+    console.log(`✅ Webhook processed successfully: ${eventType} in ${processingTime}ms`)
 
     return createCorsResponse({
       success: true,
-      message: 'Webhook processed successfully'
+      message: 'Webhook processed successfully',
+      event_id: event.id,
+      processing_time: processingTime
     })
 
   } catch (error) {
-    console.error('Webhook processing error:', error)
+    const processingTime = Date.now() - startTime
+    console.error(`❌ Webhook processing error for ${eventType}:`, error)
+    
+    // Registra l'errore per debugging
+    await logWebhookError(eventType, error, processingTime)
+    
     return createCorsResponse(
-      { success: false, error: 'Internal server error' },
+      { 
+        success: false, 
+        error: 'Internal server error',
+        event_type: eventType,
+        processing_time: processingTime
+      },
       500
     )
   }
@@ -276,10 +333,20 @@ async function handleChargeDisputeCreated(dispute: any) {
 // Funzione per aggiornare lo stock dei prodotti
 async function updateProductStock(orderId: string) {
   try {
-    // Recupera gli elementi dell'ordine
+    console.log('📦 Updating product stock for order:', orderId)
+    
+    // Recupera gli elementi dell'ordine con dettagli prodotto
     const { data: orderItems, error } = await supabase
       .from('order_items')
-      .select('product_id, quantity')
+      .select(`
+        product_id, 
+        quantity,
+        products (
+          name,
+          stock,
+          is_active
+        )
+      `)
       .eq('order_id', orderId)
 
     if (error || !orderItems) {
@@ -289,38 +356,168 @@ async function updateProductStock(orderId: string) {
 
     // Aggiorna lo stock per ogni prodotto
     for (const item of orderItems) {
-      const { error: updateError } = await supabase.rpc('decrement_product_stock', {
-        product_id: item.product_id,
-        quantity: item.quantity
-      })
+      const currentStock = item.products?.stock || 0
+      const productName = item.products?.name || 'Prodotto sconosciuto'
+      
+      console.log(`Updating stock for ${productName}: ${currentStock} -> ${currentStock - item.quantity}`)
+      
+      try {
+        // Usa la funzione database per decrementare lo stock
+        const { error: updateError } = await supabase.rpc('decrement_product_stock', {
+          product_id: item.product_id,
+          quantity: item.quantity
+        })
 
-      if (updateError) {
-        console.error('Error updating stock for product:', item.product_id, updateError)
+        if (updateError) {
+          console.error('Error updating stock for product:', item.product_id, updateError)
+          continue
+        }
+
+        // Calcola il nuovo stock dopo l'aggiornamento
+        const newStock = currentStock - item.quantity
+
+        // Controlla se il prodotto è esaurito o ha stock basso
+        if (newStock <= 0) {
+          console.warn(`🚨 Product ${productName} is now out of stock`)
+          
+          // Disattiva il prodotto se esaurito
+          await supabase
+            .from('products')
+            .update({ is_active: false })
+            .eq('id', item.product_id)
+          
+          // Notifica admin
+          await notifyAdminOutOfStock(item.product_id, productName)
+          
+        } else if (newStock <= 5) {
+          console.warn(`⚠️ Low stock alert for ${productName}: ${newStock} remaining`)
+          await notifyAdminLowStock(item.product_id, productName, newStock)
+        }
+
+        console.log(`✅ Stock updated for ${productName}`)
+
+      } catch (stockError) {
+        console.error(`Error updating stock for product ${item.product_id}:`, stockError)
       }
     }
 
+    console.log('✅ Product stock update completed for order:', orderId)
+
   } catch (error) {
-    console.error('Error updating product stock:', error)
+    console.error('❌ Error updating product stock:', error)
+  }
+}
+
+// Funzione per notificare admin di prodotto esaurito
+async function notifyAdminOutOfStock(productId: string, productName: string) {
+  try {
+    console.log(`🚨 Admin notification: Product "${productName}" is out of stock`)
+    
+    // Inserisci log nell'ordine per tracking
+    // TODO: Implementare sistema notifiche admin (email, push, dashboard)
+    
+    // Per ora registriamo l'evento nel log
+    console.log(`ADMIN_ALERT: Product ${productId} (${productName}) is OUT OF STOCK`)
+    
+  } catch (error) {
+    console.error('Error notifying admin of out of stock:', error)
+  }
+}
+
+// Funzione per notificare admin di stock basso
+async function notifyAdminLowStock(productId: string, productName: string, remainingStock: number) {
+  try {
+    console.log(`⚠️ Admin notification: Product "${productName}" has low stock: ${remainingStock}`)
+    
+    // Per ora registriamo l'evento nel log
+    console.log(`ADMIN_ALERT: Product ${productId} (${productName}) has LOW STOCK: ${remainingStock}`)
+    
+    // TODO: Implementare sistema notifiche admin (email, push, dashboard)
+    
+  } catch (error) {
+    console.error('Error notifying admin of low stock:', error)
   }
 }
 
 // Funzione per inviare email di conferma
 async function sendOrderConfirmationEmail(orderId: string) {
   try {
-    // Implementa l'invio dell'email usando il servizio email preferito
-    // Per ora, logga l'evento
-    console.log('Order confirmation email should be sent for order:', orderId)
+    console.log('📧 Sending order confirmation email for order:', orderId)
     
-    // Esempio di implementazione con un servizio email esterno:
-    // await sendEmail({
-    //   to: order.user_email,
-    //   subject: 'Conferma Ordine - Miele d\'Autore',
-    //   template: 'order_confirmation',
-    //   data: { order }
-    // })
+    // Recupera i dettagli dell'ordine con items e prodotti
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        profiles!orders_user_id_fkey (
+          full_name,
+          email
+        ),
+        order_items (
+          *,
+          products (
+            name,
+            price,
+            image_url
+          )
+        )
+      `)
+      .eq('id', orderId)
+      .single()
+
+    if (orderError || !orderData) {
+      console.error('Error fetching order for email:', orderError)
+      return
+    }
+
+    const profile = orderData.profiles
+    if (!profile?.email) {
+      console.error('No customer email found for order:', orderId)
+      return
+    }
+
+    // Prepara i dati per l'email
+    const emailData = {
+      orderNumber: orderData.order_number || orderData.id.substring(0, 8).toUpperCase(),
+      customerName: profile.full_name || 'Cliente',
+      customerEmail: profile.email,
+      orderDate: new Date(orderData.created_at).toLocaleDateString('it-IT', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      totalAmount: orderData.total_price,
+      items: orderData.order_items.map(item => ({
+        name: item.products?.name || item.product_snapshot?.name || 'Prodotto',
+        quantity: item.quantity,
+        price: item.price,
+        image_url: item.products?.image_url || item.product_snapshot?.image_url
+      })),
+      shippingAddress: orderData.shipping_address,
+      billingAddress: orderData.billing_address
+    }
+
+    // Invia l'email usando il servizio email
+    const emailSent = await sendOrderEmail(emailData)
+    
+    if (emailSent) {
+      console.log('✅ Order confirmation email sent successfully')
+      
+      // Aggiorna l'ordine per indicare che l'email è stata inviata
+      await supabase
+        .from('orders')
+        .update({ 
+          admin_notes: supabase.raw('COALESCE(admin_notes, \'\') || ?', ['\nEmail conferma inviata: ' + new Date().toISOString()])
+        })
+        .eq('id', orderId)
+    } else {
+      console.warn('⚠️ Failed to send order confirmation email')
+    }
 
   } catch (error) {
-    console.error('Error sending order confirmation email:', error)
+    console.error('❌ Error sending order confirmation email:', error)
   }
 }
 
@@ -347,4 +544,133 @@ async function updateLoyaltyPoints(userId: string, orderTotal: number) {
   } catch (error) {
     console.error('Error updating loyalty points:', error)
   }
+}
+
+// ===== FUNZIONI DI VALIDAZIONE E SICUREZZA =====
+
+// Rate limiting semplice in memoria (per produzione usare Redis)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT_WINDOW = 60000 // 1 minuto
+const RATE_LIMIT_MAX_REQUESTS = 100 // max 100 richieste per minuto per IP
+
+function isRequestAllowed(clientIP: string): boolean {
+  const now = Date.now()
+  const key = `webhook_${clientIP}`
+  
+  const existing = rateLimitMap.get(key)
+  
+  if (!existing || now > existing.resetTime) {
+    // Reset o prima richiesta
+    rateLimitMap.set(key, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW
+    })
+    return true
+  }
+  
+  if (existing.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false
+  }
+  
+  existing.count++
+  return true
+}
+
+// Verifica idempotenza eventi (evita doppia elaborazione)
+const processedEvents = new Map<string, number>()
+const EVENT_EXPIRY_TIME = 24 * 60 * 60 * 1000 // 24 ore
+
+async function checkEventIdempotence(eventId: string): Promise<boolean> {
+  const now = Date.now()
+  
+  // Pulisci eventi scaduti
+  for (const [id, timestamp] of processedEvents.entries()) {
+    if (now - timestamp > EVENT_EXPIRY_TIME) {
+      processedEvents.delete(id)
+    }
+  }
+  
+  return processedEvents.has(eventId)
+}
+
+async function recordEventProcessing(eventId: string, eventType: string): Promise<void> {
+  processedEvents.set(eventId, Date.now())
+  
+  // Opzionalmente, registra nel database per persistenza
+  try {
+    await supabase
+      .from('webhook_events')
+      .insert({
+        event_id: eventId,
+        event_type: eventType,
+        processed_at: new Date().toISOString(),
+        status: 'processing'
+      })
+      .onConflict('event_id')
+      .ignore()
+  } catch (error) {
+    // Non bloccare il processing se il log fallisce
+    console.warn('Failed to log webhook event:', error)
+  }
+}
+
+// Registra errori webhook per debugging
+async function logWebhookError(eventType: string, error: any, processingTime: number): Promise<void> {
+  try {
+    const errorLog = {
+      event_type: eventType,
+      error_message: error.message || 'Unknown error',
+      error_stack: error.stack || '',
+      processing_time: processingTime,
+      timestamp: new Date().toISOString()
+    }
+    
+    // Log in console per sviluppo
+    console.error('🚨 Webhook Error Log:', errorLog)
+    
+    // Opzionalmente, salva nel database
+    await supabase
+      .from('webhook_errors')
+      .insert(errorLog)
+      .onConflict()
+      .ignore()
+      
+  } catch (logError) {
+    console.error('Failed to log webhook error:', logError)
+  }
+}
+
+// Validazione migliorata eventi Stripe
+function validateStripeEvent(event: any): boolean {
+  if (!event || typeof event !== 'object') {
+    console.error('Invalid event object')
+    return false
+  }
+  
+  if (!event.id || typeof event.id !== 'string') {
+    console.error('Missing or invalid event ID')
+    return false
+  }
+  
+  if (!event.type || typeof event.type !== 'string') {
+    console.error('Missing or invalid event type')
+    return false
+  }
+  
+  if (!event.data || typeof event.data !== 'object') {
+    console.error('Missing or invalid event data')
+    return false
+  }
+  
+  // Verifica timestamp (non troppo vecchio o futuro)
+  const eventTime = event.created * 1000 // Stripe usa secondi
+  const now = Date.now()
+  const maxAge = 5 * 60 * 1000 // 5 minuti
+  
+  if (Math.abs(now - eventTime) > maxAge) {
+    console.warn('Event timestamp is too old or in future:', new Date(eventTime))
+    // Non bloccare, ma logga l'avviso
+  }
+  
+  return true
 }
