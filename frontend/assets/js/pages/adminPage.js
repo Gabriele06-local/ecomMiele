@@ -14,7 +14,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  updateOrderStatus
+  updateOrderStatus,
+  getBestSellingProducts
 } from '../services/api.js'
 
 // Variabili globali

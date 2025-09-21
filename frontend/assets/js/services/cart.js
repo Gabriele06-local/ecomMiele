@@ -259,9 +259,12 @@ class CartService {
         quantity: item.quantity
       }))
 
+      // Usa upsert per evitare errori di duplicazione
       const { error } = await supabase
         .from('cart_items')
-        .insert(cartItems)
+        .upsert(cartItems, {
+          onConflict: 'cart_id,product_id'
+        })
 
       if (error) {
         console.error('Errore salvataggio carrello nel database:', error)

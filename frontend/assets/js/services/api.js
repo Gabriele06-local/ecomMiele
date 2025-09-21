@@ -674,15 +674,20 @@ export async function getAdminCustomers(filters = {}) {
       return { success: false, error: profilesError.message }
     }
 
-    // Poi otteniamo le email dagli utenti auth (solo per admin)
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
-    
-    // Crea una mappa delle email per ID utente
-    const emailMap = {}
-    if (authUsers && authUsers.users) {
-      authUsers.users.forEach(user => {
-        emailMap[user.id] = user.email
-      })
+    // Prova a ottenere le email dagli utenti auth (solo se hai permessi admin)
+    let emailMap = {}
+    try {
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
+      
+      // Crea una mappa delle email per ID utente
+      if (authUsers && authUsers.users && !authError) {
+        authUsers.users.forEach(user => {
+          emailMap[user.id] = user.email
+        })
+      }
+    } catch (adminError) {
+      console.log('Admin API non disponibile, uso fallback per email')
+      // Non è un errore critico, continua senza email
     }
 
     // Calcola statistiche per ogni cliente
