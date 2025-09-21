@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrello - 🐝 Miele d'Autore</title>
+    <meta name="description" content="Rivedi i tuoi prodotti selezionati e procedi al checkout. Spedizione gratuita per ordini superiori a €50.">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components/_navbar.css">
+    <link rel="stylesheet" href="assets/css/components/_card.css">
+    <link rel="stylesheet" href="assets/css/components/_button.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="assets/images/logo.svg" alt="Miele d'Autore" class="navbar-logo">
+                <span class="navbar-title">Miele d'Autore</span>
+            </div>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <a href="index.html" class="navbar-link">Home</a>
+                <a href="product.html" class="navbar-link">Prodotti</a>
+                <a href="#" class="navbar-link active" id="cartLink">
+                    <i class="fas fa-shopping-cart"></i>
+                    Carrello <span class="cart-count" id="cartCount">0</span>
+                </a>
+                <div class="navbar-auth" id="navbarAuth">
+                    <a href="login.html" class="btn btn-outline">Accedi</a>
+                    <a href="signup.html" class="btn btn-primary">Registrati</a>
+                </div>
+                <div class="navbar-user" id="navbarUser" style="display: none;">
+                    <div class="user-dropdown">
+                        <button class="user-btn" id="userBtn">
+                            <i class="fas fa-user"></i>
+                            <span id="userName">Utente</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="user-menu" id="userMenu">
+                            <a href="profile.html" class="user-menu-item">
+                                <i class="fas fa-user"></i> Profilo
+                            </a>
+                            <a href="#" class="user-menu-item" id="adminLink" style="display: none;">
+                                <i class="fas fa-cog"></i> Admin
+                            </a>
+                            <hr class="user-menu-divider">
+                            <button class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="navbar-toggle" id="navbarToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Cart Section -->
+    <section class="cart-section">
+        <div class="container">
+            <!-- Header -->
+            <div class="cart-header">
+                <h1 class="cart-title">Il Tuo Carrello</h1>
+                <p class="cart-subtitle">Rivedi i tuoi prodotti e procedi al checkout</p>
+            </div>
+
+            <div class="cart-content">
+                <!-- Cart Items -->
+                <div class="cart-items" id="cartItems">
+                    <!-- Gli elementi del carrello verranno caricati dinamicamente -->
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Caricamento carrello...</p>
+                    </div>
+                </div>
+
+                <!-- Empty Cart State -->
+                <div class="empty-cart" id="emptyCart" style="display: none;">
+                    <div class="empty-cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h2 class="empty-cart-title">Il tuo carrello è vuoto</h2>
+                    <p class="empty-cart-description">
+                        Sembra che tu non abbia ancora aggiunto nessun prodotto al carrello. 
+                        Inizia a esplorare la nostra selezione di mieli artigianali!
+                    </p>
+                    <a href="product.html" class="btn btn-primary btn-large">
+                        <i class="fas fa-store"></i>
+                        Inizia lo Shopping
+                    </a>
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="cart-summary" id="cartSummary" style="display: none;">
+                    <div class="summary-card">
+                        <h3 class="summary-title">Riepilogo Ordine</h3>
+                        
+                        <div class="summary-line">
+                            <span>Subtotale:</span>
+                            <span id="subtotal">€0.00</span>
+                        </div>
+                        
+                        <div class="summary-line">
+                            <span>Spedizione:</span>
+                            <span id="shipping">€0.00</span>
+                        </div>
+                        
+                        <div class="summary-line shipping-note" id="shippingNote" style="display: none;">
+                            <small>Spedizione gratuita per ordini superiori a €50</small>
+                        </div>
+                        
+                        <hr class="summary-divider">
+                        
+                        <div class="summary-line summary-total">
+                            <span>Totale:</span>
+                            <span id="total">€0.00</span>
+                        </div>
+                        
+                        <div class="summary-actions">
+                            <button class="btn btn-primary btn-large btn-full" id="checkoutBtn">
+                                <i class="fas fa-credit-card"></i>
+                                Procedi al Checkout
+                            </button>
+                            
+                            <a href="product.html" class="btn btn-outline btn-full">
+                                <i class="fas fa-arrow-left"></i>
+                                Continua lo Shopping
+                            </a>
+                        </div>
+                        
+                        <!-- Trust Signals -->
+                        <div class="trust-signals">
+                            <div class="trust-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Pagamento Sicuro</span>
+                            </div>
+                            <div class="trust-item">
+                                <i class="fas fa-truck"></i>
+                                <span>Spedizione Veloce</span>
+                            </div>
+                            <div class="trust-item">
+                                <i class="fas fa-undo"></i>
+                                <span>Reso Gratuito</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Prompt Modal -->
+    <div class="modal" id="loginPromptModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Accedi per Continuare</h2>
+                <button class="modal-close" id="loginPromptClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="login-prompt">
+                    <div class="login-prompt-icon">
+                        <i class="fas fa-user-lock"></i>
+                    </div>
+                    <h3>Per procedere al checkout, effettua l'accesso</h3>
+                    <p>
+                        Accedi al tuo account per completare l'acquisto e tenere traccia dei tuoi ordini.
+                        Il tuo carrello verrà salvato automaticamente.
+                    </p>
+                    
+                    <div class="login-prompt-actions">
+                        <a href="login.html" class="btn btn-primary btn-large">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Accedi
+                        </a>
+                        <a href="signup.html" class="btn btn-outline btn-large">
+                            <i class="fas fa-user-plus"></i>
+                            Registrati
+                        </a>
+                    </div>
+                    
+                    <div class="login-prompt-guest">
+                        <p>Oppure continua come ospite</p>
+                        <button class="btn btn-ghost" id="continueAsGuest">
+                            <i class="fas fa-user"></i>
+                            Continua come Ospite
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chatbot -->
+    <div class="ai-chatbot" id="aiChatbot">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fas fa-robot"></i>
+                <span>AI Assistant</span>
+            </div>
+            <button class="chatbot-close" id="chatbotClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="message assistant-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>Hai bisogno di aiuto con il tuo carrello? Posso consigliarti prodotti complementari o rispondere alle tue domande! 🛒</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chatbot-input">
+            <input type="text" id="chatbotInput" placeholder="Chiedi aiuto per il tuo carrello..." maxlength="500">
+            <button id="chatbotSend" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Assistant Button -->
+    <button class="ai-assistant-btn" id="aiAssistantToggle">
+        <i class="fas fa-robot"></i>
+        <span class="ai-pulse"></span>
+    </button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/images/logo.svg" alt="Miele d'Autore" class="footer-logo">
+                        <h3>Miele d'Autore</h3>
+                    </div>
+                    <p>La tradizione del miele artigianale italiano, portata nel futuro con l'innovazione tecnologica.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Link Utili</h4>
+                    <ul>
+                        <li><a href="product.html">Prodotti</a></li>
+                        <li><a href="#">Chi Siamo</a></li>
+                        <li><a href="#">Contatti</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Supporto</h4>
+                    <ul>
+                        <li><a href="#">Spedizioni</a></li>
+                        <li><a href="#">Resi</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Termini di Servizio</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Seguici</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Miele d'Autore. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/pages/cartPage.js"></script>
+</body>
+</html>

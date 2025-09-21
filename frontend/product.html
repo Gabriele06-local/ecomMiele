@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prodotti - 🐝 Miele d'Autore</title>
+    <meta name="description" content="Scopri la nostra collezione di mieli artigianali: acacia, castagno, millefiori, tiglio e molti altri. Qualità premium garantita.">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components/_navbar.css">
+    <link rel="stylesheet" href="assets/css/components/_card.css">
+    <link rel="stylesheet" href="assets/css/components/_button.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="assets/images/logo.svg" alt="Miele d'Autore" class="navbar-logo">
+                <span class="navbar-title">Miele d'Autore</span>
+            </div>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <a href="index.html" class="navbar-link">Home</a>
+                <a href="product.html" class="navbar-link active">Prodotti</a>
+                <a href="#" class="navbar-link" id="cartLink">
+                    <i class="fas fa-shopping-cart"></i>
+                    Carrello <span class="cart-count" id="cartCount">0</span>
+                </a>
+                <div class="navbar-auth" id="navbarAuth">
+                    <a href="login.html" class="btn btn-outline">Accedi</a>
+                    <a href="signup.html" class="btn btn-primary">Registrati</a>
+                </div>
+                <div class="navbar-user" id="navbarUser" style="display: none;">
+                    <div class="user-dropdown">
+                        <button class="user-btn" id="userBtn">
+                            <i class="fas fa-user"></i>
+                            <span id="userName">Utente</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="user-menu" id="userMenu">
+                            <a href="profile.html" class="user-menu-item">
+                                <i class="fas fa-user"></i> Profilo
+                            </a>
+                            <a href="#" class="user-menu-item" id="adminLink" style="display: none;">
+                                <i class="fas fa-cog"></i> Admin
+                            </a>
+                            <hr class="user-menu-divider">
+                            <button class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="navbar-toggle" id="navbarToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <!-- Header -->
+            <div class="products-header">
+                <h1 class="products-title">I Nostri Mieli Artigianali</h1>
+                <p class="products-subtitle">
+                    Ogni vasetto racconta una storia di tradizione e natura incontaminata. 
+                    Scopri la dolcezza autentica dei nostri mieli di qualità premium.
+                </p>
+            </div>
+
+            <!-- Filters -->
+            <div class="products-filters">
+                <div class="filter-group">
+                    <label for="categoryFilter">Categoria:</label>
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">Tutte le categorie</option>
+                        <option value="acacia">Acacia</option>
+                        <option value="castagno">Castagno</option>
+                        <option value="millefiori">Millefiori</option>
+                        <option value="tiglio">Tiglio</option>
+                        <option value="eucalipto">Eucalipto</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="priceFilter">Prezzo:</label>
+                    <select id="priceFilter" class="filter-select">
+                        <option value="">Tutti i prezzi</option>
+                        <option value="0-15">€0 - €15</option>
+                        <option value="15-25">€15 - €25</option>
+                        <option value="25-35">€25 - €35</option>
+                        <option value="35+">€35+</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sortFilter">Ordina per:</label>
+                    <select id="sortFilter" class="filter-select">
+                        <option value="name">Nome</option>
+                        <option value="price-low">Prezzo: basso-alto</option>
+                        <option value="price-high">Prezzo: alto-basso</option>
+                        <option value="rating">Valutazione</option>
+                        <option value="newest">Più recenti</option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button class="btn btn-outline" id="clearFilters">
+                        <i class="fas fa-times"></i>
+                        Cancella filtri
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid" id="productsGrid">
+                <!-- I prodotti verranno caricati dinamicamente -->
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Caricamento prodotti...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- La paginazione verrà generata dinamicamente -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Quick View Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Dettagli Prodotto</h2>
+                <button class="modal-close" id="modalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="modalBody">
+                <!-- Il contenuto del prodotto verrà caricato dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chatbot -->
+    <div class="ai-chatbot" id="aiChatbot">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fas fa-robot"></i>
+                <span>AI Assistant</span>
+            </div>
+            <button class="chatbot-close" id="chatbotClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="message assistant-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>Ciao! Posso aiutarti a scegliere il miele perfetto per te. Dimmi cosa stai cercando! 🍯</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chatbot-input">
+            <input type="text" id="chatbotInput" placeholder="Chiedi consigli sui nostri mieli..." maxlength="500">
+            <button id="chatbotSend" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Assistant Button -->
+    <button class="ai-assistant-btn" id="aiAssistantToggle">
+        <i class="fas fa-robot"></i>
+        <span class="ai-pulse"></span>
+    </button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/images/logo.svg" alt="Miele d'Autore" class="footer-logo">
+                        <h3>Miele d'Autore</h3>
+                    </div>
+                    <p>La tradizione del miele artigianale italiano, portata nel futuro con l'innovazione tecnologica.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Link Utili</h4>
+                    <ul>
+                        <li><a href="product.html">Prodotti</a></li>
+                        <li><a href="#">Chi Siamo</a></li>
+                        <li><a href="#">Contatti</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Supporto</h4>
+                    <ul>
+                        <li><a href="#">Spedizioni</a></li>
+                        <li><a href="#">Resi</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Termini di Servizio</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Seguici</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Miele d'Autore. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/pages/productPage.js"></script>
+</body>
+</html>

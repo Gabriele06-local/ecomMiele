@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐝 Miele d'Autore - Ecommerce Premium</title>
+    <meta name="description" content="Scopri i migliori mieli artigianali d'Italia. Qualità premium, consegna rapida e AI assistant per consigli personalizzati.">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components/_navbar.css">
+    <link rel="stylesheet" href="assets/css/components/_card.css">
+    <link rel="stylesheet" href="assets/css/components/_button.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="assets/images/logo.svg" alt="Miele d'Autore" class="navbar-logo">
+                <span class="navbar-title">Miele d'Autore</span>
+            </div>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <a href="index.html" class="navbar-link active">Home</a>
+                <a href="product.html" class="navbar-link">Prodotti</a>
+                <a href="#" class="navbar-link" id="cartLink">
+                    <i class="fas fa-shopping-cart"></i>
+                    Carrello <span class="cart-count" id="cartCount">0</span>
+                </a>
+                <div class="navbar-auth" id="navbarAuth">
+                    <a href="login.html" class="btn btn-outline">Accedi</a>
+                    <a href="signup.html" class="btn btn-primary">Registrati</a>
+                </div>
+                <div class="navbar-user" id="navbarUser" style="display: none;">
+                    <div class="user-dropdown">
+                        <button class="user-btn" id="userBtn">
+                            <i class="fas fa-user"></i>
+                            <span id="userName">Utente</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="user-menu" id="userMenu">
+                            <a href="profile.html" class="user-menu-item">
+                                <i class="fas fa-user"></i> Profilo
+                            </a>
+                            <a href="#" class="user-menu-item" id="adminLink" style="display: none;">
+                                <i class="fas fa-cog"></i> Admin
+                            </a>
+                            <hr class="user-menu-divider">
+                            <button class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="navbar-toggle" id="navbarToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Miele Artigianale di <span class="highlight">Qualità Premium</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Scopri la dolcezza autentica del nostro miele, prodotto con passione dagli apicoltori più esperti d'Italia. 
+                    Ogni vasetto racconta una storia di tradizione e natura incontaminata.
+                </p>
+                <div class="hero-actions">
+                    <a href="product.html" class="btn btn-primary btn-large">
+                        <i class="fas fa-store"></i>
+                        Scopri i Prodotti
+                    </a>
+                    <button class="btn btn-outline btn-large" id="aiAssistantBtn">
+                        <i class="fas fa-robot"></i>
+                        AI Assistant
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="assets/images/honey-jar.jpg" alt="Miele Premium" class="hero-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h3 class="feature-title">100% Naturale</h3>
+                    <p class="feature-description">
+                        Miele puro senza additivi, raccolto direttamente dai nostri alveari controllati.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <h3 class="feature-title">Spedizione Veloce</h3>
+                    <p class="feature-description">
+                        Consegna in 24-48 ore in tutta Italia con imballaggio speciale per la sicurezza.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h3 class="feature-title">Qualità Certificata</h3>
+                    <p class="feature-description">
+                        Certificazioni biologiche e controlli di qualità per garantire la massima purezza.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="feature-title">AI Assistant</h3>
+                    <p class="feature-description">
+                        Consigli personalizzati e risposte alle tue domande grazie alla nostra AI specializzata.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Preview -->
+    <section class="products-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">I Nostri Prodotti in Evidenza</h2>
+                <p class="section-subtitle">Una selezione dei nostri mieli più pregiati</p>
+            </div>
+            
+            <div class="products-grid" id="featuredProducts">
+                <!-- I prodotti verranno caricati dinamicamente -->
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Caricamento prodotti...</p>
+                </div>
+            </div>
+            
+            <div class="section-footer">
+                <a href="product.html" class="btn btn-primary">
+                    <i class="fas fa-store"></i>
+                    Vedi Tutti i Prodotti
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Chatbot -->
+    <div class="ai-chatbot" id="aiChatbot">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fas fa-robot"></i>
+                <span>AI Assistant</span>
+            </div>
+            <button class="chatbot-close" id="chatbotClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="message assistant-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>Ciao! Sono il tuo assistente AI per il miele. Posso aiutarti a scegliere il prodotto perfetto per te! 🍯</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chatbot-input">
+            <input type="text" id="chatbotInput" placeholder="Chiedi qualcosa sui nostri mieli..." maxlength="500">
+            <button id="chatbotSend" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Assistant Button -->
+    <button class="ai-assistant-btn" id="aiAssistantToggle">
+        <i class="fas fa-robot"></i>
+        <span class="ai-pulse"></span>
+    </button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/images/logo.svg" alt="Miele d'Autore" class="footer-logo">
+                        <h3>Miele d'Autore</h3>
+                    </div>
+                    <p>La tradizione del miele artigianale italiano, portata nel futuro con l'innovazione tecnologica.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Link Utili</h4>
+                    <ul>
+                        <li><a href="product.html">Prodotti</a></li>
+                        <li><a href="#">Chi Siamo</a></li>
+                        <li><a href="#">Contatti</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Supporto</h4>
+                    <ul>
+                        <li><a href="#">Spedizioni</a></li>
+                        <li><a href="#">Resi</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Termini di Servizio</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Seguici</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Miele d'Autore. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

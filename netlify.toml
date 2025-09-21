@@ -1,0 +1,118 @@
+# Configurazione Netlify per Ecommerce Miele d'Autore
+
+[build]
+  # Directory di build (il frontend è già pronto)
+  publish = "frontend"
+  
+  # Comandi di build (opzionale per un sito statico)
+  command = "echo 'Frontend ready for deployment'"
+
+[build.environment]
+  # Variabili d'ambiente per il frontend
+  NODE_VERSION = "18"
+  
+  # Supabase (sostituire con le tue credenziali)
+  VITE_SUPABASE_URL = "your_supabase_project_url"
+  VITE_SUPABASE_ANON_KEY = "your_supabase_anon_key"
+
+# Headers di sicurezza
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    
+    # Content Security Policy
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.skypack.dev https://cdnjs.cloudflare.com https://generativelanguage.googleapis.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: https: blob:;
+      connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com https://api.stripe.com;
+      frame-src https://js.stripe.com https://hooks.stripe.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    """
+
+# Cache per i file statici
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+# Redirect per SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Redirect specifici
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 301
+
+[[redirects]]
+  from = "/products"
+  to = "/product.html"
+  status = 301
+
+[[redirects]]
+  from = "/cart"
+  to = "/cart.html"
+  status = 301
+
+# Funzioni Edge (se implementate)
+[functions]
+  directory = "netlify/functions"
+
+# Plugin per ottimizzazioni
+[[plugins]]
+  package = "@netlify/plugin-sitemap"
+
+  [plugins.inputs]
+    buildDir = "frontend"
+    exclude = [
+      "/admin.html",
+      "/login.html",
+      "/signup.html",
+      "/profile.html"
+    ]
+
+# Form handling (per contatti)
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+  minify = true
+
+# Deploy preview
+[context.deploy-preview]
+  command = "echo 'Preview build'"
+
+[context.branch-deploy]
+  command = "echo 'Branch deploy'"

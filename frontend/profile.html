@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilo - 🐝 Miele d'Autore</title>
+    <meta name="description" content="Gestisci il tuo profilo, visualizza i tuoi ordini e le tue recensioni nel tuo account personale.">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components/_navbar.css">
+    <link rel="stylesheet" href="assets/css/components/_card.css">
+    <link rel="stylesheet" href="assets/css/components/_button.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="assets/images/logo.svg" alt="Miele d'Autore" class="navbar-logo">
+                <span class="navbar-title">Miele d'Autore</span>
+            </div>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <a href="index.html" class="navbar-link">Home</a>
+                <a href="product.html" class="navbar-link">Prodotti</a>
+                <a href="#" class="navbar-link" id="cartLink">
+                    <i class="fas fa-shopping-cart"></i>
+                    Carrello <span class="cart-count" id="cartCount">0</span>
+                </a>
+                <div class="navbar-auth" id="navbarAuth" style="display: none;">
+                    <a href="login.html" class="btn btn-outline">Accedi</a>
+                    <a href="signup.html" class="btn btn-primary">Registrati</a>
+                </div>
+                <div class="navbar-user" id="navbarUser">
+                    <div class="user-dropdown">
+                        <button class="user-btn" id="userBtn">
+                            <i class="fas fa-user"></i>
+                            <span id="userName">Utente</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="user-menu" id="userMenu">
+                            <a href="profile.html" class="user-menu-item active">
+                                <i class="fas fa-user"></i> Profilo
+                            </a>
+                            <a href="#" class="user-menu-item" id="adminLink" style="display: none;">
+                                <i class="fas fa-cog"></i> Admin
+                            </a>
+                            <hr class="user-menu-divider">
+                            <button class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="navbar-toggle" id="navbarToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Profile Section -->
+    <section class="profile-section">
+        <div class="container">
+            <div class="profile-container">
+                <!-- Profile Sidebar -->
+                <div class="profile-sidebar">
+                    <div class="profile-card">
+                        <div class="profile-avatar">
+                            <img src="" alt="Avatar" id="profileAvatar">
+                            <div class="profile-avatar-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <h3 class="profile-name" id="profileName">Nome Utente</h3>
+                        <p class="profile-email" id="profileEmail">email@example.com</p>
+                        
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <div class="stat-number" id="ordersCount">0</div>
+                                <div class="stat-label">Ordini</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="reviewsCount">0</div>
+                                <div class="stat-label">Recensioni</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="pointsCount">0</div>
+                                <div class="stat-label">Punti Fedeltà</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <nav class="profile-nav">
+                        <button class="profile-nav-item active" data-tab="overview">
+                            <i class="fas fa-home"></i>
+                            Panoramica
+                        </button>
+                        <button class="profile-nav-item" data-tab="orders">
+                            <i class="fas fa-shopping-bag"></i>
+                            I Miei Ordini
+                        </button>
+                        <button class="profile-nav-item" data-tab="reviews">
+                            <i class="fas fa-star"></i>
+                            Le Mie Recensioni
+                        </button>
+                        <button class="profile-nav-item" data-tab="wishlist">
+                            <i class="fas fa-heart"></i>
+                            Lista Desideri
+                        </button>
+                        <button class="profile-nav-item" data-tab="settings">
+                            <i class="fas fa-cog"></i>
+                            Impostazioni
+                        </button>
+                        <button class="profile-nav-item" data-tab="addresses">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Indirizzi
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Profile Content -->
+                <div class="profile-content">
+                    <!-- Overview Tab -->
+                    <div class="profile-tab active" id="overviewTab">
+                        <div class="tab-header">
+                            <h2>Panoramica Account</h2>
+                            <p>Benvenuto nel tuo account personale</p>
+                        </div>
+                        
+                        <div class="overview-grid">
+                            <div class="overview-card">
+                                <div class="overview-icon">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <h3>Ultimi Ordini</h3>
+                                <div class="recent-orders" id="recentOrders">
+                                    <div class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Caricamento...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="overview-card">
+                                <div class="overview-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <h3>Recensioni Recenti</h3>
+                                <div class="recent-reviews" id="recentReviews">
+                                    <div class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Caricamento...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="overview-card">
+                                <div class="overview-icon">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <h3>Programma Fedeltà</h3>
+                                <div class="loyalty-info">
+                                    <div class="loyalty-points">
+                                        <span class="points-number" id="loyaltyPoints">0</span>
+                                        <span class="points-label">punti</span>
+                                    </div>
+                                    <p>Raccogli punti con ogni acquisto e risparmia sui prossimi ordini!</p>
+                                    <div class="loyalty-progress">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="loyaltyProgress"></div>
+                                        </div>
+                                        <span class="progress-text">150 punti per il prossimo livello</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div class="profile-tab" id="ordersTab">
+                        <div class="tab-header">
+                            <h2>I Miei Ordini</h2>
+                            <p>Visualizza lo stato dei tuoi ordini</p>
+                        </div>
+                        
+                        <div class="orders-list" id="ordersList">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Caricamento ordini...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reviews Tab -->
+                    <div class="profile-tab" id="reviewsTab">
+                        <div class="tab-header">
+                            <h2>Le Mie Recensioni</h2>
+                            <p>Le tue recensioni e valutazioni</p>
+                        </div>
+                        
+                        <div class="reviews-list" id="reviewsList">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Caricamento recensioni...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wishlist Tab -->
+                    <div class="profile-tab" id="wishlistTab">
+                        <div class="tab-header">
+                            <h2>Lista Desideri</h2>
+                            <p>I tuoi prodotti preferiti</p>
+                        </div>
+                        
+                        <div class="wishlist-grid" id="wishlistGrid">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Caricamento lista desideri...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div class="profile-tab" id="settingsTab">
+                        <div class="tab-header">
+                            <h2>Impostazioni Account</h2>
+                            <p>Gestisci le tue preferenze</p>
+                        </div>
+                        
+                        <div class="settings-content">
+                            <form class="settings-form" id="settingsForm">
+                                <div class="form-section">
+                                    <h3>Informazioni Personali</h3>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="firstName" class="form-label">Nome</label>
+                                            <input type="text" id="firstName" name="firstName" class="form-input">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="lastName" class="form-label">Cognome</label>
+                                            <input type="text" id="lastName" name="lastName" class="form-input">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" id="email" name="email" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone" class="form-label">Telefono</label>
+                                        <input type="tel" id="phone" name="phone" class="form-input">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <h3>Preferenze</h3>
+                                    <div class="form-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="newsletter" name="newsletter">
+                                            <span class="checkbox-custom"></span>
+                                            <span class="checkbox-text">Ricevi newsletter e offerte speciali</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="smsUpdates" name="smsUpdates">
+                                            <span class="checkbox-custom"></span>
+                                            <span class="checkbox-text">Ricevi aggiornamenti via SMS</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <h3>Sicurezza</h3>
+                                    <button type="button" class="btn btn-outline" id="changePasswordBtn">
+                                        <i class="fas fa-key"></i>
+                                        Cambia Password
+                                    </button>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        Salva Modifiche
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Addresses Tab -->
+                    <div class="profile-tab" id="addressesTab">
+                        <div class="tab-header">
+                            <h2>I Miei Indirizzi</h2>
+                            <p>Gestisci i tuoi indirizzi di spedizione</p>
+                        </div>
+                        
+                        <div class="addresses-content">
+                            <button class="btn btn-primary" id="addAddressBtn">
+                                <i class="fas fa-plus"></i>
+                                Aggiungi Indirizzo
+                            </button>
+                            
+                            <div class="addresses-list" id="addressesList">
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Caricamento indirizzi...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Cambia Password</h2>
+                <button class="modal-close" id="changePasswordClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword" class="form-label">Password Attuale</label>
+                        <input type="password" id="currentPassword" name="currentPassword" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPassword" class="form-label">Nuova Password</label>
+                        <input type="password" id="newPassword" name="newPassword" class="form-input" required minlength="8">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmNewPassword" class="form-label">Conferma Nuova Password</label>
+                        <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="fas fa-key"></i>
+                        Cambia Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/images/logo.svg" alt="Miele d'Autore" class="footer-logo">
+                        <h3>Miele d'Autore</h3>
+                    </div>
+                    <p>La tradizione del miele artigianale italiano, portata nel futuro con l'innovazione tecnologica.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Link Utili</h4>
+                    <ul>
+                        <li><a href="product.html">Prodotti</a></li>
+                        <li><a href="#">Chi Siamo</a></li>
+                        <li><a href="#">Contatti</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Supporto</h4>
+                    <ul>
+                        <li><a href="#">Spedizioni</a></li>
+                        <li><a href="#">Resi</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Termini di Servizio</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Seguici</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Miele d'Autore. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

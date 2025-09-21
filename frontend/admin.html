@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - 🐝 Miele d'Autore</title>
+    <meta name="description" content="Dashboard amministrativa per gestire prodotti, ordini e recensioni dell'ecommerce Miele d'Autore.">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components/_navbar.css">
+    <link rel="stylesheet" href="assets/css/components/_card.css">
+    <link rel="stylesheet" href="assets/css/components/_button.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <img src="assets/images/logo.svg" alt="Miele d'Autore" class="navbar-logo">
+                <span class="navbar-title">Miele d'Autore</span>
+            </div>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <a href="index.html" class="navbar-link">Home</a>
+                <a href="product.html" class="navbar-link">Prodotti</a>
+                <a href="#" class="navbar-link" id="cartLink">
+                    <i class="fas fa-shopping-cart"></i>
+                    Carrello <span class="cart-count" id="cartCount">0</span>
+                </a>
+                <div class="navbar-auth" id="navbarAuth" style="display: none;">
+                    <a href="login.html" class="btn btn-outline">Accedi</a>
+                    <a href="signup.html" class="btn btn-primary">Registrati</a>
+                </div>
+                <div class="navbar-user" id="navbarUser">
+                    <div class="user-dropdown">
+                        <button class="user-btn" id="userBtn">
+                            <i class="fas fa-user"></i>
+                            <span id="userName">Admin</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="user-menu" id="userMenu">
+                            <a href="profile.html" class="user-menu-item">
+                                <i class="fas fa-user"></i> Profilo
+                            </a>
+                            <a href="admin.html" class="user-menu-item active">
+                                <i class="fas fa-cog"></i> Admin
+                            </a>
+                            <hr class="user-menu-divider">
+                            <button class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="navbar-toggle" id="navbarToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Admin Dashboard -->
+    <section class="admin-section">
+        <div class="container">
+            <div class="admin-container">
+                <!-- Admin Sidebar -->
+                <div class="admin-sidebar">
+                    <div class="admin-header">
+                        <h2>Admin Dashboard</h2>
+                        <p>Gestisci il tuo ecommerce</p>
+                    </div>
+                    
+                    <nav class="admin-nav">
+                        <button class="admin-nav-item active" data-tab="overview">
+                            <i class="fas fa-chart-pie"></i>
+                            Panoramica
+                        </button>
+                        <button class="admin-nav-item" data-tab="products">
+                            <i class="fas fa-box"></i>
+                            Prodotti
+                        </button>
+                        <button class="admin-nav-item" data-tab="orders">
+                            <i class="fas fa-shopping-cart"></i>
+                            Ordini
+                        </button>
+                        <button class="admin-nav-item" data-tab="reviews">
+                            <i class="fas fa-star"></i>
+                            Recensioni
+                        </button>
+                        <button class="admin-nav-item" data-tab="customers">
+                            <i class="fas fa-users"></i>
+                            Clienti
+                        </button>
+                        <button class="admin-nav-item" data-tab="analytics">
+                            <i class="fas fa-chart-line"></i>
+                            Analytics
+                        </button>
+                        <button class="admin-nav-item" data-tab="settings">
+                            <i class="fas fa-cog"></i>
+                            Impostazioni
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Admin Content -->
+                <div class="admin-content">
+                    <!-- Overview Tab -->
+                    <div class="admin-tab active" id="overviewTab">
+                        <div class="tab-header">
+                            <h2>Panoramica Dashboard</h2>
+                            <p>Statistiche e metriche chiave del tuo ecommerce</p>
+                        </div>
+                        
+                        <!-- Stats Cards -->
+                        <div class="stats-grid">
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="stats-content">
+                                    <h3 id="totalOrders">0</h3>
+                                    <p>Ordini Totali</p>
+                                    <span class="stats-change positive" id="ordersChange">+12%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="fas fa-euro-sign"></i>
+                                </div>
+                                <div class="stats-content">
+                                    <h3 id="totalRevenue">€0</h3>
+                                    <p>Ricavi Totali</p>
+                                    <span class="stats-change positive" id="revenueChange">+8%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stats-content">
+                                    <h3 id="totalCustomers">0</h3>
+                                    <p>Clienti Totali</p>
+                                    <span class="stats-change positive" id="customersChange">+15%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="stats-content">
+                                    <h3 id="totalProducts">0</h3>
+                                    <p>Prodotti Attivi</p>
+                                    <span class="stats-change neutral" id="productsChange">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Activity -->
+                        <div class="admin-grid">
+                            <div class="admin-card">
+                                <div class="card-header">
+                                    <h3>Ordini Recenti</h3>
+                                    <a href="#" class="card-link">Vedi tutti</a>
+                                </div>
+                                <div class="recent-orders" id="adminRecentOrders">
+                                    <div class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Caricamento...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="admin-card">
+                                <div class="card-header">
+                                    <h3>Recensioni in Attesa</h3>
+                                    <a href="#" class="card-link">Modera tutte</a>
+                                </div>
+                                <div class="pending-reviews" id="pendingReviews">
+                                    <div class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Caricamento...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Tab -->
+                    <div class="admin-tab" id="productsTab">
+                        <div class="tab-header">
+                            <h2>Gestione Prodotti</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-primary" id="addProductBtn">
+                                    <i class="fas fa-plus"></i>
+                                    Aggiungi Prodotto
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="products-management">
+                            <div class="management-filters">
+                                <input type="text" id="productSearch" placeholder="Cerca prodotti..." class="search-input">
+                                <select id="categoryFilter" class="filter-select">
+                                    <option value="">Tutte le categorie</option>
+                                    <option value="acacia">Acacia</option>
+                                    <option value="castagno">Castagno</option>
+                                    <option value="millefiori">Millefiori</option>
+                                    <option value="tiglio">Tiglio</option>
+                                    <option value="eucalipto">Eucalipto</option>
+                                </select>
+                                <select id="statusFilter" class="filter-select">
+                                    <option value="">Tutti gli stati</option>
+                                    <option value="active">Attivo</option>
+                                    <option value="inactive">Inattivo</option>
+                                    <option value="out_of_stock">Esaurito</option>
+                                </select>
+                            </div>
+                            
+                            <div class="products-table-container">
+                                <table class="admin-table" id="productsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Immagine</th>
+                                            <th>Nome</th>
+                                            <th>Categoria</th>
+                                            <th>Prezzo</th>
+                                            <th>Stock</th>
+                                            <th>Stato</th>
+                                            <th>Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="loading-cell">
+                                                <div class="loading-spinner">
+                                                    <i class="fas fa-spinner fa-spin"></i>
+                                                    <p>Caricamento prodotti...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div class="admin-tab" id="ordersTab">
+                        <div class="tab-header">
+                            <h2>Gestione Ordini</h2>
+                            <div class="header-actions">
+                                <select id="orderStatusFilter" class="filter-select">
+                                    <option value="">Tutti gli stati</option>
+                                    <option value="pending_payment">Pagamento in Attesa</option>
+                                    <option value="in_corso">In Corso</option>
+                                    <option value="spedito">Spedito</option>
+                                    <option value="completato">Completato</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="orders-management">
+                            <div class="orders-table-container">
+                                <table class="admin-table" id="ordersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Ordine</th>
+                                            <th>Cliente</th>
+                                            <th>Data</th>
+                                            <th>Totale</th>
+                                            <th>Stato</th>
+                                            <th>Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ordersTableBody">
+                                        <tr>
+                                            <td colspan="6" class="loading-cell">
+                                                <div class="loading-spinner">
+                                                    <i class="fas fa-spinner fa-spin"></i>
+                                                    <p>Caricamento ordini...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reviews Tab -->
+                    <div class="admin-tab" id="reviewsTab">
+                        <div class="tab-header">
+                            <h2>Moderazione Recensioni</h2>
+                            <div class="header-actions">
+                                <select id="reviewStatusFilter" class="filter-select">
+                                    <option value="">Tutti gli stati</option>
+                                    <option value="pending">In Attesa</option>
+                                    <option value="approved">Approvate</option>
+                                    <option value="rejected">Rifiutate</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="reviews-management">
+                            <div class="reviews-list" id="adminReviewsList">
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Caricamento recensioni...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customers Tab -->
+                    <div class="admin-tab" id="customersTab">
+                        <div class="tab-header">
+                            <h2>Gestione Clienti</h2>
+                            <div class="header-actions">
+                                <input type="text" id="customerSearch" placeholder="Cerca clienti..." class="search-input">
+                            </div>
+                        </div>
+                        
+                        <div class="customers-management">
+                            <div class="customers-table-container">
+                                <table class="admin-table" id="customersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Email</th>
+                                            <th>Data Registrazione</th>
+                                            <th>Ordini</th>
+                                            <th>Spesa Totale</th>
+                                            <th>Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customersTableBody">
+                                        <tr>
+                                            <td colspan="6" class="loading-cell">
+                                                <div class="loading-spinner">
+                                                    <i class="fas fa-spinner fa-spin"></i>
+                                                    <p>Caricamento clienti...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Tab -->
+                    <div class="admin-tab" id="analyticsTab">
+                        <div class="tab-header">
+                            <h2>Analytics e Report</h2>
+                            <div class="header-actions">
+                                <select id="analyticsPeriod" class="filter-select">
+                                    <option value="7">Ultimi 7 giorni</option>
+                                    <option value="30">Ultimi 30 giorni</option>
+                                    <option value="90">Ultimi 90 giorni</option>
+                                    <option value="365">Ultimo anno</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-content">
+                            <div class="analytics-grid">
+                                <div class="analytics-card">
+                                    <h3>Vendite nel Tempo</h3>
+                                    <div class="chart-placeholder" id="salesChart">
+                                        <p>Grafico vendite (da implementare con Chart.js)</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="analytics-card">
+                                    <h3>Prodotti Più Venduti</h3>
+                                    <div class="top-products" id="topProducts">
+                                        <div class="loading-spinner">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            <p>Caricamento...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analytics-card">
+                                    <h3>Clienti per Regione</h3>
+                                    <div class="customers-region" id="customersRegion">
+                                        <div class="loading-spinner">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            <p>Caricamento...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analytics-card">
+                                    <h3>Conversioni</h3>
+                                    <div class="conversion-metrics" id="conversionMetrics">
+                                        <div class="metric-item">
+                                            <span class="metric-label">Tasso di Conversione</span>
+                                            <span class="metric-value">3.2%</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">Carrello Abbandonato</span>
+                                            <span class="metric-value">68%</span>
+                                        </div>
+                                        <div class="metric-item">
+                                            <span class="metric-label">Valore Medio Ordine</span>
+                                            <span class="metric-value">€45.20</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div class="admin-tab" id="settingsTab">
+                        <div class="tab-header">
+                            <h2>Impostazioni Generali</h2>
+                            <p>Configura le impostazioni del tuo ecommerce</p>
+                        </div>
+                        
+                        <div class="settings-content">
+                            <form class="admin-settings-form" id="adminSettingsForm">
+                                <div class="form-section">
+                                    <h3>Impostazioni Generali</h3>
+                                    <div class="form-group">
+                                        <label for="storeName" class="form-label">Nome Negozio</label>
+                                        <input type="text" id="storeName" name="storeName" class="form-input" value="Miele d'Autore">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="storeEmail" class="form-label">Email Contatto</label>
+                                        <input type="email" id="storeEmail" name="storeEmail" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="storePhone" class="form-label">Telefono</label>
+                                        <input type="tel" id="storePhone" name="storePhone" class="form-input">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <h3>Impostazioni Spedizione</h3>
+                                    <div class="form-group">
+                                        <label for="freeShippingThreshold" class="form-label">Soglia Spedizione Gratuita (€)</label>
+                                        <input type="number" id="freeShippingThreshold" name="freeShippingThreshold" class="form-input" value="50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="shippingCost" class="form-label">Costo Spedizione Standard (€)</label>
+                                        <input type="number" id="shippingCost" name="shippingCost" class="form-input" value="5.99">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <h3>Impostazioni AI</h3>
+                                    <div class="form-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="aiModeration" name="aiModeration" checked>
+                                            <span class="checkbox-custom"></span>
+                                            <span class="checkbox-text">Abilita moderazione AI per le recensioni</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="aiRecommendations" name="aiRecommendations" checked>
+                                            <span class="checkbox-custom"></span>
+                                            <span class="checkbox-text">Abilita raccomandazioni AI</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        Salva Impostazioni
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 class="modal-title" id="productModalTitle">Aggiungi Prodotto</h2>
+                <button class="modal-close" id="productModalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="productForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productName" class="form-label">Nome Prodotto</label>
+                            <input type="text" id="productName" name="name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory" class="form-label">Categoria</label>
+                            <select id="productCategory" name="category" class="form-input" required>
+                                <option value="">Seleziona categoria</option>
+                                <option value="acacia">Acacia</option>
+                                <option value="castagno">Castagno</option>
+                                <option value="millefiori">Millefiori</option>
+                                <option value="tiglio">Tiglio</option>
+                                <option value="eucalipto">Eucalipto</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productPrice" class="form-label">Prezzo (€)</label>
+                            <input type="number" id="productPrice" name="price" class="form-input" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productStock" class="form-label">Stock</label>
+                            <input type="number" id="productStock" name="stock" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productDescription" class="form-label">Descrizione</label>
+                        <textarea id="productDescription" name="description" class="form-input" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productImage" class="form-label">Immagine</label>
+                        <input type="file" id="productImage" name="image" class="form-input" accept="image/*">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="fas fa-save"></i>
+                        Salva Prodotto
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/images/logo.svg" alt="Miele d'Autore" class="footer-logo">
+                        <h3>Miele d'Autore</h3>
+                    </div>
+                    <p>La tradizione del miele artigianale italiano, portata nel futuro con l'innovazione tecnologica.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Link Utili</h4>
+                    <ul>
+                        <li><a href="product.html">Prodotti</a></li>
+                        <li><a href="#">Chi Siamo</a></li>
+                        <li><a href="#">Contatti</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Supporto</h4>
+                    <ul>
+                        <li><a href="#">Spedizioni</a></li>
+                        <li><a href="#">Resi</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Termini di Servizio</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Seguici</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Miele d'Autore. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/pages/adminPage.js"></script>
+</body>
+</html>
