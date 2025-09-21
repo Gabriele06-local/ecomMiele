@@ -262,7 +262,7 @@ CREATE TRIGGER update_coupons_updated_at BEFORE UPDATE ON public.coupons FOR EAC
 
 -- Funzione per generare numero ordine
 CREATE OR REPLACE FUNCTION generate_order_number()
-RETURNS TEXT AS $$
+RETURNS TRIGGER AS $$
 DECLARE
     new_number TEXT;
     counter INTEGER;
@@ -270,7 +270,11 @@ BEGIN
     -- Genera un numero ordine con formato ORD-YYYYMMDD-XXXX
     SELECT COUNT(*) + 1 INTO counter FROM public.orders WHERE DATE(created_at) = CURRENT_DATE;
     new_number := 'ORD-' || TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || '-' || LPAD(counter::TEXT, 4, '0');
-    RETURN new_number;
+    
+    -- Assegna il numero ordine al record
+    NEW.order_number := new_number;
+    
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
