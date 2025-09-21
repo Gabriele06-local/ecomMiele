@@ -93,32 +93,61 @@ async function createUserProfile(user) {
 }
 
 function updateProfileUI(user, profile) {
-    // Aggiorna nome utente
-    const userNameElement = document.querySelector('.user-name')
-    if (userNameElement) {
-        userNameElement.textContent = `${profile.first_name} ${profile.last_name}`
+    console.log('🔄 Aggiornamento UI profilo:', { user: user.email, profile })
+    
+    // Aggiorna nome utente nella sidebar
+    const profileNameElement = document.getElementById('profileName')
+    if (profileNameElement) {
+        profileNameElement.textContent = `${profile.first_name} ${profile.last_name}`
     }
     
-    // Aggiorna email
-    const userEmailElement = document.querySelector('.user-email')
-    if (userEmailElement) {
-        userEmailElement.textContent = user.email
+    // Aggiorna email nella sidebar
+    const profileEmailElement = document.getElementById('profileEmail')
+    if (profileEmailElement) {
+        profileEmailElement.textContent = user.email
     }
     
     // Aggiorna avatar (se disponibile)
-    const avatarElement = document.querySelector('.user-avatar')
-    if (avatarElement && profile.avatar_url) {
-        avatarElement.src = profile.avatar_url
+    const profileAvatarElement = document.getElementById('profileAvatar')
+    if (profileAvatarElement && profile.avatar_url) {
+        profileAvatarElement.src = profile.avatar_url
     }
     
-    // Aggiorna punti fedeltà
-    const loyaltyPointsElement = document.querySelector('.loyalty-points')
-    if (loyaltyPointsElement) {
-        loyaltyPointsElement.textContent = profile.loyalty_points || 0
+    // Aggiorna statistiche nella sidebar
+    const ordersCountElement = document.getElementById('ordersCount')
+    if (ordersCountElement) {
+        ordersCountElement.textContent = '0' // Sarà aggiornato quando carichiamo gli ordini
     }
+    
+    const reviewsCountElement = document.getElementById('reviewsCount')
+    if (reviewsCountElement) {
+        reviewsCountElement.textContent = '0' // Sarà aggiornato quando carichiamo le recensioni
+    }
+    
+    const pointsCountElement = document.getElementById('pointsCount')
+    if (pointsCountElement) {
+        pointsCountElement.textContent = profile.loyalty_points || 0
+    }
+    
+    // Aggiorna anche la navbar
+    updateNavbarProfile(user, profile)
     
     // Aggiorna info account
     updateAccountInfo(profile)
+}
+
+function updateNavbarProfile(user, profile) {
+    // Aggiorna nome nella navbar
+    const navbarUserName = document.getElementById('userName')
+    if (navbarUserName) {
+        navbarUserName.textContent = `${profile.first_name} ${profile.last_name}`
+    }
+    
+    // Aggiorna email nella navbar se esiste
+    const navbarUserEmail = document.querySelector('.user-email')
+    if (navbarUserEmail) {
+        navbarUserEmail.textContent = user.email
+    }
 }
 
 function updateAccountInfo(profile) {
@@ -215,6 +244,12 @@ function updateOrdersUI(orders) {
     const ordersContainer = document.querySelector('.recent-orders')
     if (!ordersContainer) return
     
+    // Aggiorna il contatore degli ordini
+    const ordersCountElement = document.getElementById('ordersCount')
+    if (ordersCountElement) {
+        ordersCountElement.textContent = orders.length
+    }
+    
     if (orders.length === 0) {
         ordersContainer.innerHTML = '<p>Nessun ordine trovato</p>'
         return
@@ -237,6 +272,12 @@ function updateOrdersUI(orders) {
 function updateReviewsUI(reviews) {
     const reviewsContainer = document.querySelector('.recent-reviews')
     if (!reviewsContainer) return
+    
+    // Aggiorna il contatore delle recensioni
+    const reviewsCountElement = document.getElementById('reviewsCount')
+    if (reviewsCountElement) {
+        reviewsCountElement.textContent = reviews.length
+    }
     
     if (reviews.length === 0) {
         reviewsContainer.innerHTML = '<p>Nessuna recensione trovata</p>'
