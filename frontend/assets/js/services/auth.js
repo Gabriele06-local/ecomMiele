@@ -18,7 +18,10 @@ export async function getCurrentUser() {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
     if (sessionError) {
-      console.warn('Nessuna sessione attiva:', sessionError.message)
+      // Non loggare come errore se è solo "session missing"
+      if (sessionError.message !== 'Auth session missing!') {
+        console.warn('Errore sessione:', sessionError.message)
+      }
       return null
     }
     
@@ -30,13 +33,19 @@ export async function getCurrentUser() {
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error) {
-      console.warn('Errore nel recupero utente:', error.message)
+      // Non loggare come errore se è solo "session missing"
+      if (error.message !== 'Auth session missing!') {
+        console.warn('Errore nel recupero utente:', error.message)
+      }
       return null
     }
     
     return user
   } catch (error) {
-    console.warn('Errore nel recupero utente:', error.message)
+    // Non loggare come errore se è solo "session missing"
+    if (error.message !== 'Auth session missing!') {
+      console.warn('Errore nel recupero utente:', error.message)
+    }
     return null
   }
 }

@@ -67,9 +67,14 @@ async function initializeAuth() {
   })
 
   // Verifica se c'è già una sessione attiva
-  const user = await getCurrentUser()
-  if (user) {
-    await handleUserLogin(user)
+  try {
+    const user = await getCurrentUser()
+    if (user) {
+      await handleUserLogin(user)
+    }
+  } catch (error) {
+    // Nessuna sessione attiva - questo è normale per utenti non autenticati
+    console.log('ℹ️ Nessuna sessione attiva - utente non autenticato')
   }
 }
 
