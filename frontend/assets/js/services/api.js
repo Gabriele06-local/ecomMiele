@@ -641,8 +641,10 @@ export async function rejectReview(reviewId, moderationNotes = '') {
 
 // Ottiene tutti i clienti per l'admin
 export async function getAdminCustomers(filters = {}) {
+  console.log('🔍 getAdminCustomers chiamata - NO API ADMIN')
+  
   try {
-    // Prima otteniamo i profili
+    // Query SOLO sui profili - nessuna chiamata API admin
     let profileQuery = supabase
       .from('profiles')
       .select(`
@@ -674,7 +676,9 @@ export async function getAdminCustomers(filters = {}) {
       return { success: false, error: profilesError.message }
     }
 
-    // Calcola statistiche per ogni cliente (senza email per privacy)
+    console.log('✅ Profili caricati:', profilesData.length)
+
+    // Calcola statistiche per ogni cliente (SENZA email)
     const customersWithStats = profilesData.map(customer => {
       const orders = customer.orders || []
       const completedOrders = orders.filter(order => order.status === 'completato')
@@ -684,13 +688,14 @@ export async function getAdminCustomers(filters = {}) {
         ...customer,
         orderCount: orders.length,
         totalSpent,
-        email: 'Privacy protetta' // Non mostriamo email per sicurezza
+        email: 'Email non disponibile' // Nessuna chiamata API admin
       }
     })
 
+    console.log('✅ Clienti elaborati:', customersWithStats.length)
     return { success: true, data: customersWithStats }
   } catch (error) {
-    console.error('Errore recupero clienti admin:', error)
+    console.error('❌ Errore recupero clienti admin:', error)
     return { success: false, error: 'Errore di connessione' }
   }
 }

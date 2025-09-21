@@ -62,7 +62,7 @@ async function initializeAuth() {
       await handleUserLogin(session.user)
     } else if (event === 'SIGNED_OUT') {
       // Utente disconnesso
-      handleUserLogout()
+      await handleUserLogout()
     }
   })
 
@@ -142,11 +142,11 @@ async function createUserProfile(user) {
   }
 }
 
-function handleUserLogout() {
+async function handleUserLogout() {
   console.log('👤 Utente disconnesso')
   
   // Imposta carrello anonimo
-  cartService.setCurrentUser(null)
+  await cartService.setCurrentUser(null)
   
   // Aggiorna il contatore del carrello
   updateCartUI(cartService.getItemCount())

@@ -12,7 +12,7 @@ class CartService {
     this.items = []
     this.isSynced = false
     this.currentUserId = null
-    this.loadFromStorage()
+    // Non caricare subito dal storage, aspetta che venga impostato l'utente
   }
 
   // Ottiene le chiavi localStorage specifiche per l'utente
@@ -58,20 +58,32 @@ class CartService {
 
   // Imposta l'utente corrente e ricarica il carrello
   async setCurrentUser(userId) {
+    console.log(`🛒 Cambio utente carrello: ${this.currentUserId} -> ${userId}`)
+    
     // Se cambia utente, salva il carrello corrente
     if (this.currentUserId !== userId) {
-      this.saveToStorage()
+      // Salva il carrello dell'utente precedente (se c'era)
+      if (this.currentUserId !== null) {
+        this.saveToStorage()
+      }
       
       // Cambia utente
       this.currentUserId = userId
       
-      // Carica il carrello del nuovo utente
+      // Resetta e carica il carrello del nuovo utente
+      this.items = []
+      this.isSynced = false
       this.loadFromStorage()
+      
+      console.log(`🛒 Carrello caricato per utente ${userId}:`, this.items.length, 'elementi')
       
       // Se l'utente è loggato, sincronizza con il database
       if (userId) {
         await this.syncWithDatabase()
       }
+      
+      // Notifica i listener del cambiamento
+      this.notifyListeners()
     }
   }
 
