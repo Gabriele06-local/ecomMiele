@@ -1,6 +1,21 @@
 // Pagina admin
 import { getCurrentUser, isUserAdmin } from '../services/auth.js'
-import { getProducts, getAdminStats } from '../services/api.js'
+import { 
+  getProducts, 
+  getAdminStats, 
+  getAdminOrders,
+  getRecentOrders,
+  getPendingReviews,
+  getAdminReviews,
+  approveReview,
+  rejectReview,
+  getAdminCustomers,
+  getAdminProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  updateOrderStatus
+} from '../services/api.js'
 
 // Variabili globali
 let currentTab = 'overview'
@@ -115,19 +130,19 @@ function updateStatsDisplay() {
   const totalProductsElement = document.getElementById('totalProducts')
 
   if (totalOrdersElement) {
-    totalOrdersElement.textContent = adminStats.totalOrders || 0
+    totalOrdersElement.textContent = adminStats.total_orders || 0
   }
 
   if (totalRevenueElement) {
-    totalRevenueElement.textContent = `€${(adminStats.totalRevenue || 0).toFixed(2)}`
+    totalRevenueElement.textContent = `€${(adminStats.total_revenue || 0).toFixed(2)}`
   }
 
   if (totalCustomersElement) {
-    totalCustomersElement.textContent = adminStats.totalCustomers || 0
+    totalCustomersElement.textContent = adminStats.total_customers || 0
   }
 
   if (totalProductsElement) {
-    totalProductsElement.textContent = adminStats.totalProducts || 0
+    totalProductsElement.textContent = adminStats.total_products || 0
   }
 }
 
@@ -135,6 +150,15 @@ function updateStatsDisplay() {
 function initializeTabComponents() {
   // Inizializza i filtri dei prodotti
   initializeProductFilters()
+  
+  // Inizializza i filtri degli ordini
+  initializeOrderFilters()
+  
+  // Inizializza i filtri delle recensioni
+  initializeReviewFilters()
+  
+  // Inizializza i filtri dei clienti
+  initializeCustomerFilters()
   
   // Inizializza i modali
   initializeModals()
@@ -162,6 +186,39 @@ function initializeProductFilters() {
 
   if (statusFilter) {
     statusFilter.addEventListener('change', loadProducts)
+  }
+}
+
+// Inizializza i filtri degli ordini
+function initializeOrderFilters() {
+  const statusFilter = document.getElementById('orderStatusFilter')
+  
+  if (statusFilter) {
+    statusFilter.addEventListener('change', loadOrders)
+  }
+}
+
+// Inizializza i filtri delle recensioni
+function initializeReviewFilters() {
+  const statusFilter = document.getElementById('reviewStatusFilter')
+  
+  if (statusFilter) {
+    statusFilter.addEventListener('change', loadReviews)
+  }
+}
+
+// Inizializza i filtri dei clienti
+function initializeCustomerFilters() {
+  const searchInput = document.getElementById('customerSearch')
+  
+  if (searchInput) {
+    let searchTimeout
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout)
+      searchTimeout = setTimeout(() => {
+        loadCustomers()
+      }, 500)
+    })
   }
 }
 
@@ -244,27 +301,46 @@ async function loadRecentOrders() {
     </div>
   `
 
-  // Simula il caricamento degli ordini
-  setTimeout(() => {
+  try {
+    const result = await getRecentOrders(5)
+    
+    if (result.success && result.data.length > 0) {
+      container.innerHTML = result.data.map(order => {
+        const customerName = order.profiles ? 
+          `${order.profiles.first_name} ${order.profiles.last_name}` : 
+          'Cliente sconosciuto'
+        
+        const statusClass = getOrderStatusClass(order.status)
+        const statusText = getOrderStatusText(order.status)
+        
+        return `
+          <div class="recent-order-item">
+            <div class="order-info">
+              <span class="order-id">#${order.order_number}</span>
+              <span class="order-customer">${customerName}</span>
+            </div>
+            <div class="order-status ${statusClass}">${statusText}</div>
+            <div class="order-total">€${order.total_price.toFixed(2)}</div>
+          </div>
+        `
+      }).join('')
+    } else {
+      container.innerHTML = `
+        <div class="no-data-message">
+          <i class="fas fa-inbox"></i>
+          <span>Nessun ordine recente</span>
+        </div>
+      `
+    }
+  } catch (error) {
+    console.error('Errore caricamento ordini recenti:', error)
     container.innerHTML = `
-      <div class="recent-order-item">
-        <div class="order-info">
-          <span class="order-id">#ORD-001</span>
-          <span class="order-customer">Mario Rossi</span>
-        </div>
-        <div class="order-status pending">In Corso</div>
-        <div class="order-total">€45.20</div>
-      </div>
-      <div class="recent-order-item">
-        <div class="order-info">
-          <span class="order-id">#ORD-002</span>
-          <span class="order-customer">Giulia Bianchi</span>
-        </div>
-        <div class="order-status completed">Completato</div>
-        <div class="order-total">€32.50</div>
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Errore caricamento ordini</span>
       </div>
     `
-  }, 1000)
+  }
 }
 
 // Carica recensioni in attesa
@@ -279,26 +355,53 @@ async function loadPendingReviews() {
     </div>
   `
 
-  // Simula il caricamento delle recensioni
-  setTimeout(() => {
+  try {
+    const result = await getPendingReviews(5)
+    
+    if (result.success && result.data.length > 0) {
+      container.innerHTML = result.data.map(review => {
+        const authorName = review.profiles ? 
+          `${review.profiles.first_name} ${review.profiles.last_name}` : 
+          'Utente sconosciuto'
+        
+        const rating = '⭐'.repeat(review.rating)
+        
+        return `
+          <div class="pending-review-item">
+            <div class="review-content">
+              <div class="review-product">${review.products?.name || 'Prodotto sconosciuto'}</div>
+              <div class="review-rating">${rating}</div>
+              <p class="review-text">${review.comment || 'Nessun commento'}</p>
+              <span class="review-author">${authorName}</span>
+            </div>
+            <div class="review-actions">
+              <button class="btn btn-success btn-small" onclick="handleApproveReview('${review.id}')">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn btn-danger btn-small" onclick="handleRejectReview('${review.id}')">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        `
+      }).join('')
+    } else {
+      container.innerHTML = `
+        <div class="no-data-message">
+          <i class="fas fa-star"></i>
+          <span>Nessuna recensione in attesa</span>
+        </div>
+      `
+    }
+  } catch (error) {
+    console.error('Errore caricamento recensioni in attesa:', error)
     container.innerHTML = `
-      <div class="pending-review-item">
-        <div class="review-content">
-          <div class="review-rating">⭐⭐⭐⭐⭐</div>
-          <p class="review-text">Ottimo miele, molto saporito!</p>
-          <span class="review-author">Marco Verdi</span>
-        </div>
-        <div class="review-actions">
-          <button class="btn btn-success btn-small" onclick="approveReview(1)">
-            <i class="fas fa-check"></i>
-          </button>
-          <button class="btn btn-danger btn-small" onclick="rejectReview(1)">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Errore caricamento recensioni</span>
       </div>
     `
-  }, 1000)
+  }
 }
 
 // Carica i prodotti
@@ -319,7 +422,7 @@ async function loadProducts() {
 
   try {
     const filters = getProductFilters()
-    const result = await getProducts(filters)
+    const result = await getAdminProducts(filters)
     
     if (result.success) {
       currentProducts = result.data
@@ -403,7 +506,7 @@ function displayProductsTable(products) {
           <button class="btn btn-outline btn-small" onclick="editProduct('${product.id}')">
             <i class="fas fa-edit"></i>
           </button>
-          <button class="btn btn-danger btn-small" onclick="deleteProduct('${product.id}')">
+          <button class="btn btn-danger btn-small" onclick="handleDeleteProduct('${product.id}')">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -435,28 +538,33 @@ async function loadOrders() {
     </tr>
   `
 
-  // Simula il caricamento degli ordini
-  setTimeout(() => {
+  try {
+    const statusFilter = document.getElementById('orderStatusFilter')
+    const filters = {
+      status: statusFilter?.value || '',
+      limit: 50
+    }
+    
+    const result = await getAdminOrders(filters)
+    
+    if (result.success) {
+      displayOrdersTable(result.data)
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('Errore caricamento ordini:', error)
     tableBody.innerHTML = `
       <tr>
-        <td>#ORD-001</td>
-        <td>Mario Rossi</td>
-        <td>2024-01-15</td>
-        <td>€45.20</td>
-        <td><span class="status-indicator in-progress">In Corso</span></td>
-        <td>
-          <div class="action-buttons">
-            <button class="btn btn-outline btn-small" onclick="viewOrder('ORD-001')">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button class="btn btn-primary btn-small" onclick="updateOrderStatus('ORD-001')">
-              <i class="fas fa-edit"></i>
-            </button>
+        <td colspan="6" class="error-cell">
+          <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Errore caricamento ordini</span>
           </div>
         </td>
       </tr>
     `
-  }, 1000)
+  }
 }
 
 // Carica le recensioni
@@ -471,32 +579,71 @@ async function loadReviews() {
     </div>
   `
 
-  // Simula il caricamento delle recensioni
-  setTimeout(() => {
-    container.innerHTML = `
-      <div class="admin-review-item">
-        <div class="review-header">
-          <div class="review-product">Miele di Acacia</div>
-          <div class="review-rating">⭐⭐⭐⭐⭐</div>
-        </div>
-        <div class="review-content">
-          <p>Ottimo miele, molto saporito e naturale!</p>
-          <div class="review-meta">
-            <span class="review-author">Marco Verdi</span>
-            <span class="review-date">2024-01-15</span>
+  try {
+    const statusFilter = document.getElementById('reviewStatusFilter')
+    const filters = {
+      status: statusFilter?.value || '',
+      limit: 20
+    }
+    
+    const result = await getAdminReviews(filters)
+    
+    if (result.success && result.data.length > 0) {
+      container.innerHTML = result.data.map(review => {
+        const authorName = review.profiles ? 
+          `${review.profiles.first_name} ${review.profiles.last_name}` : 
+          'Utente sconosciuto'
+        
+        const rating = '⭐'.repeat(review.rating)
+        const date = new Date(review.created_at).toLocaleDateString('it-IT')
+        const statusClass = review.is_approved ? 'approved' : 'pending'
+        
+        return `
+          <div class="admin-review-item ${statusClass}">
+            <div class="review-header">
+              <div class="review-product">${review.products?.name || 'Prodotto sconosciuto'}</div>
+              <div class="review-rating">${rating}</div>
+              <div class="review-status ${review.is_approved ? 'approved' : 'pending'}">
+                ${review.is_approved ? 'Approvata' : 'In attesa'}
+              </div>
+            </div>
+            <div class="review-content">
+              <p>${review.comment || 'Nessun commento'}</p>
+              <div class="review-meta">
+                <span class="review-author">${authorName}</span>
+                <span class="review-date">${date}</span>
+              </div>
+            </div>
+            ${!review.is_approved ? `
+              <div class="review-actions">
+                <button class="btn btn-success btn-small" onclick="handleApproveReview('${review.id}')">
+                  <i class="fas fa-check"></i> Approva
+                </button>
+                <button class="btn btn-danger btn-small" onclick="handleRejectReview('${review.id}')">
+                  <i class="fas fa-times"></i> Rifiuta
+                </button>
+              </div>
+            ` : ''}
           </div>
+        `
+      }).join('')
+    } else {
+      container.innerHTML = `
+        <div class="no-data-message">
+          <i class="fas fa-star"></i>
+          <span>Nessuna recensione trovata</span>
         </div>
-        <div class="review-actions">
-          <button class="btn btn-success btn-small" onclick="approveReview(1)">
-            <i class="fas fa-check"></i> Approva
-          </button>
-          <button class="btn btn-danger btn-small" onclick="rejectReview(1)">
-            <i class="fas fa-times"></i> Rifiuta
-          </button>
-        </div>
+      `
+    }
+  } catch (error) {
+    console.error('Errore caricamento recensioni:', error)
+    container.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Errore caricamento recensioni</span>
       </div>
     `
-  }, 1000)
+  }
 }
 
 // Carica i clienti
@@ -515,25 +662,33 @@ async function loadCustomers() {
     </tr>
   `
 
-  // Simula il caricamento dei clienti
-  setTimeout(() => {
+  try {
+    const searchInput = document.getElementById('customerSearch')
+    const filters = {
+      search: searchInput?.value || '',
+      limit: 50
+    }
+    
+    const result = await getAdminCustomers(filters)
+    
+    if (result.success) {
+      displayCustomersTable(result.data)
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('Errore caricamento clienti:', error)
     tableBody.innerHTML = `
       <tr>
-        <td>Mario Rossi</td>
-        <td>mario.rossi@email.com</td>
-        <td>2024-01-10</td>
-        <td>3</td>
-        <td>€127.50</td>
-        <td>
-          <div class="action-buttons">
-            <button class="btn btn-outline btn-small" onclick="viewCustomer('customer-1')">
-              <i class="fas fa-eye"></i>
-            </button>
+        <td colspan="6" class="error-cell">
+          <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Errore caricamento clienti</span>
           </div>
         </td>
       </tr>
     `
-  }, 1000)
+  }
 }
 
 // Carica le analytics
@@ -577,19 +732,234 @@ function editProduct(productId) {
 }
 
 // Elimina un prodotto
-async function deleteProduct(productId) {
+async function handleDeleteProduct(productId) {
   if (!confirm('Sei sicuro di voler eliminare questo prodotto?')) {
     return
   }
 
   try {
-    // Implementa l'eliminazione del prodotto
-    console.log('Eliminazione prodotto:', productId)
-    showNotification('Prodotto eliminato con successo', 'success')
-    loadProducts()
+    const result = await deleteProduct(productId)
+    
+    if (result.success) {
+      showNotification('Prodotto eliminato con successo', 'success')
+      loadProducts()
+    } else {
+      throw new Error(result.error)
+    }
   } catch (error) {
     console.error('Errore eliminazione prodotto:', error)
     showNotification('Errore eliminazione prodotto', 'error')
+  }
+}
+
+// ===== FUNZIONI DI SUPPORTO =====
+
+// Ottiene la classe CSS per lo stato dell'ordine
+function getOrderStatusClass(status) {
+  switch (status) {
+    case 'pending_payment': return 'pending'
+    case 'payment_failed': return 'failed'
+    case 'in_corso': return 'in-progress'
+    case 'spedito': return 'shipped'
+    case 'completato': return 'completed'
+    case 'cancellato': return 'cancelled'
+    default: return 'pending'
+  }
+}
+
+// Ottiene il testo per lo stato dell'ordine
+function getOrderStatusText(status) {
+  switch (status) {
+    case 'pending_payment': return 'Pagamento in Attesa'
+    case 'payment_failed': return 'Pagamento Fallito'
+    case 'in_corso': return 'In Corso'
+    case 'spedito': return 'Spedito'
+    case 'completato': return 'Completato'
+    case 'cancellato': return 'Cancellato'
+    default: return 'Sconosciuto'
+  }
+}
+
+// Visualizza la tabella degli ordini
+function displayOrdersTable(orders) {
+  const tableBody = document.getElementById('ordersTableBody')
+  if (!tableBody) return
+
+  if (orders.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="no-data-cell">
+          <div class="no-data-message">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Nessun ordine trovato</span>
+          </div>
+        </td>
+      </tr>
+    `
+    return
+  }
+
+  tableBody.innerHTML = orders.map(order => {
+    const customerName = order.profiles ? 
+      `${order.profiles.first_name} ${order.profiles.last_name}` : 
+      'Cliente sconosciuto'
+    
+    const date = new Date(order.created_at).toLocaleDateString('it-IT')
+    const statusClass = getOrderStatusClass(order.status)
+    const statusText = getOrderStatusText(order.status)
+
+    return `
+      <tr>
+        <td>#${order.order_number}</td>
+        <td>${customerName}</td>
+        <td>${date}</td>
+        <td>€${order.total_price.toFixed(2)}</td>
+        <td><span class="status-indicator ${statusClass}">${statusText}</span></td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn btn-outline btn-small" onclick="viewOrder('${order.id}')">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn btn-primary btn-small" onclick="handleUpdateOrderStatus('${order.id}', '${order.status}')">
+              <i class="fas fa-edit"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `
+  }).join('')
+}
+
+// Visualizza la tabella dei clienti
+function displayCustomersTable(customers) {
+  const tableBody = document.getElementById('customersTableBody')
+  if (!tableBody) return
+
+  if (customers.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="no-data-cell">
+          <div class="no-data-message">
+            <i class="fas fa-users"></i>
+            <span>Nessun cliente trovato</span>
+          </div>
+        </td>
+      </tr>
+    `
+    return
+  }
+
+  tableBody.innerHTML = customers.map(customer => {
+    const fullName = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Nome non disponibile'
+    const registrationDate = new Date(customer.created_at).toLocaleDateString('it-IT')
+
+    return `
+      <tr>
+        <td>${fullName}</td>
+        <td>${customer.email || 'Email non disponibile'}</td>
+        <td>${registrationDate}</td>
+        <td>${customer.orderCount || 0}</td>
+        <td>€${(customer.totalSpent || 0).toFixed(2)}</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn btn-outline btn-small" onclick="viewCustomer('${customer.id}')">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `
+  }).join('')
+}
+
+// ===== GESTIONE RECENSIONI =====
+
+// Gestisce l'approvazione di una recensione
+async function handleApproveReview(reviewId) {
+  try {
+    const result = await approveReview(reviewId)
+    
+    if (result.success) {
+      showNotification('Recensione approvata con successo', 'success')
+      // Ricarica le recensioni in attesa e quelle nella tab recensioni
+      if (currentTab === 'overview') {
+        loadPendingReviews()
+      } else if (currentTab === 'reviews') {
+        loadReviews()
+      }
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('Errore approvazione recensione:', error)
+    showNotification('Errore approvazione recensione', 'error')
+  }
+}
+
+// Gestisce il rifiuto di una recensione
+async function handleRejectReview(reviewId) {
+  const reason = prompt('Motivo del rifiuto (opzionale):')
+  
+  try {
+    const result = await rejectReview(reviewId, reason || '')
+    
+    if (result.success) {
+      showNotification('Recensione rifiutata', 'success')
+      // Ricarica le recensioni in attesa e quelle nella tab recensioni
+      if (currentTab === 'overview') {
+        loadPendingReviews()
+      } else if (currentTab === 'reviews') {
+        loadReviews()
+      }
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('Errore rifiuto recensione:', error)
+    showNotification('Errore rifiuto recensione', 'error')
+  }
+}
+
+// ===== GESTIONE ORDINI =====
+
+// Gestisce l'aggiornamento dello stato di un ordine
+async function handleUpdateOrderStatus(orderId, currentStatus) {
+  const statuses = [
+    { value: 'pending_payment', text: 'Pagamento in Attesa' },
+    { value: 'in_corso', text: 'In Corso' },
+    { value: 'spedito', text: 'Spedito' },
+    { value: 'completato', text: 'Completato' },
+    { value: 'cancellato', text: 'Cancellato' }
+  ]
+  
+  const options = statuses
+    .filter(status => status.value !== currentStatus)
+    .map(status => `${status.value}: ${status.text}`)
+    .join('\n')
+  
+  const newStatus = prompt(`Seleziona il nuovo stato:\n${options}\n\nInserisci il valore:`)
+  
+  if (!newStatus || !statuses.find(s => s.value === newStatus)) {
+    return
+  }
+  
+  const adminNotes = prompt('Note admin (opzionale):')
+  
+  try {
+    const result = await updateOrderStatus(orderId, newStatus, adminNotes || '')
+    
+    if (result.success) {
+      showNotification('Stato ordine aggiornato con successo', 'success')
+      loadOrders()
+      if (currentTab === 'overview') {
+        loadRecentOrders()
+      }
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('Errore aggiornamento stato ordine:', error)
+    showNotification('Errore aggiornamento stato ordine', 'error')
   }
 }
 
@@ -622,9 +992,9 @@ function showNotification(message, type = 'info') {
 
 // Rendi disponibili le funzioni globalmente
 window.editProduct = editProduct
-window.deleteProduct = deleteProduct
-window.approveReview = (id) => console.log('Approvazione recensione:', id)
-window.rejectReview = (id) => console.log('Rifiuto recensione:', id)
+window.handleDeleteProduct = handleDeleteProduct
+window.handleApproveReview = handleApproveReview
+window.handleRejectReview = handleRejectReview
+window.handleUpdateOrderStatus = handleUpdateOrderStatus
 window.viewOrder = (id) => console.log('Visualizza ordine:', id)
-window.updateOrderStatus = (id) => console.log('Aggiorna stato ordine:', id)
 window.viewCustomer = (id) => console.log('Visualizza cliente:', id)
