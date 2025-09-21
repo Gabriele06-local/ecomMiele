@@ -642,7 +642,8 @@ export async function rejectReview(reviewId, moderationNotes = '') {
 // Ottiene tutti i clienti per l'admin
 export async function getAdminCustomers(filters = {}) {
   try {
-    let query = supabase
+    // Prima otteniamo i profili
+    let profileQuery = supabase
       .from('profiles')
       .select(`
         id,
@@ -659,22 +660,33 @@ export async function getAdminCustomers(filters = {}) {
       .order('created_at', { ascending: false })
 
     if (filters.limit) {
-      query = query.limit(filters.limit)
+      profileQuery = profileQuery.limit(filters.limit)
     }
 
     if (filters.search) {
-      query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%`)
+      profileQuery = profileQuery.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%`)
     }
 
-    const { data, error } = await query
+    const { data: profilesData, error: profilesError } = await profileQuery
 
-    if (error) {
-      console.error('Errore recupero clienti admin:', error)
-      return { success: false, error: error.message }
+    if (profilesError) {
+      console.error('Errore recupero clienti admin:', profilesError)
+      return { success: false, error: profilesError.message }
+    }
+
+    // Poi otteniamo le email dagli utenti auth (solo per admin)
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
+    
+    // Crea una mappa delle email per ID utente
+    const emailMap = {}
+    if (authUsers && authUsers.users) {
+      authUsers.users.forEach(user => {
+        emailMap[user.id] = user.email
+      })
     }
 
     // Calcola statistiche per ogni cliente
-    const customersWithStats = data.map(customer => {
+    const customersWithStats = profilesData.map(customer => {
       const orders = customer.orders || []
       const completedOrders = orders.filter(order => order.status === 'completato')
       const totalSpent = completedOrders.reduce((sum, order) => sum + order.total_price, 0)
@@ -683,13 +695,58 @@ export async function getAdminCustomers(filters = {}) {
         ...customer,
         orderCount: orders.length,
         totalSpent,
-        email: `${customer.first_name?.toLowerCase()}.${customer.last_name?.toLowerCase()}@email.com` // Placeholder
+        email: emailMap[customer.id] || 'Email non disponibile'
       }
     })
 
     return { success: true, data: customersWithStats }
   } catch (error) {
     console.error('Errore recupero clienti admin:', error)
+    // Se fallisce il recupero delle email, usa un fallback
+    if (error.message?.includes('admin')) {
+      // Fallback senza email reali
+      const profileQuery = supabase
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          created_at,
+          loyalty_points,
+          orders (
+            id,
+            total_price,
+            status
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (filters.limit) {
+        profileQuery.limit(filters.limit)
+      }
+
+      if (filters.search) {
+        profileQuery.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%`)
+      }
+
+      const { data: fallbackData } = await profileQuery
+      
+      const customersWithStats = (fallbackData || []).map(customer => {
+        const orders = customer.orders || []
+        const completedOrders = orders.filter(order => order.status === 'completato')
+        const totalSpent = completedOrders.reduce((sum, order) => sum + order.total_price, 0)
+
+        return {
+          ...customer,
+          orderCount: orders.length,
+          totalSpent,
+          email: 'Email privata'
+        }
+      })
+
+      return { success: true, data: customersWithStats }
+    }
+    
     return { success: false, error: 'Errore di connessione' }
   }
 }
