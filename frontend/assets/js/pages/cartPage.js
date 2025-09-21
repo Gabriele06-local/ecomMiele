@@ -37,9 +37,12 @@ async function initializeCartPage() {
 // Carica il carrello
 async function loadCart() {
   try {
-    // Sincronizza con il database se l'utente è loggato
+    // Imposta l'utente corrente se loggato
     if (isLoggedIn) {
-      await cartService.syncWithDatabase()
+      const user = await getCurrentUser()
+      await cartService.setCurrentUser(user.id)
+    } else {
+      await cartService.setCurrentUser(null)
     }
 
     cartItems = cartService.getItems()

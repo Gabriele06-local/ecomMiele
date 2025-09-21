@@ -2,23 +2,34 @@
 import { supabase } from './supabaseClient.js'
 import { getCurrentUser } from './auth.js'
 
-// Chiavi per localStorage
-const CART_STORAGE_KEY = 'miele_cart'
-const CART_SYNC_KEY = 'cart_synced'
+// Chiavi base per localStorage
+const CART_STORAGE_BASE = 'miele_cart'
+const CART_SYNC_BASE = 'cart_synced'
 
 // Classe per gestire il carrello
 class CartService {
   constructor() {
     this.items = []
     this.isSynced = false
+    this.currentUserId = null
     this.loadFromStorage()
+  }
+
+  // Ottiene le chiavi localStorage specifiche per l'utente
+  getStorageKeys() {
+    const userId = this.currentUserId || 'anonymous'
+    return {
+      cart: `${CART_STORAGE_BASE}_${userId}`,
+      sync: `${CART_SYNC_BASE}_${userId}`
+    }
   }
 
   // Carica il carrello dal localStorage
   loadFromStorage() {
     try {
-      const stored = localStorage.getItem(CART_STORAGE_KEY)
-      const synced = localStorage.getItem(CART_SYNC_KEY)
+      const keys = this.getStorageKeys()
+      const stored = localStorage.getItem(keys.cart)
+      const synced = localStorage.getItem(keys.sync)
       
       if (stored) {
         this.items = JSON.parse(stored)
@@ -37,10 +48,43 @@ class CartService {
   // Salva il carrello nel localStorage
   saveToStorage() {
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(this.items))
-      localStorage.setItem(CART_SYNC_KEY, JSON.stringify(this.isSynced))
+      const keys = this.getStorageKeys()
+      localStorage.setItem(keys.cart, JSON.stringify(this.items))
+      localStorage.setItem(keys.sync, JSON.stringify(this.isSynced))
     } catch (error) {
       console.error('Errore salvataggio carrello:', error)
+    }
+  }
+
+  // Imposta l'utente corrente e ricarica il carrello
+  async setCurrentUser(userId) {
+    // Se cambia utente, salva il carrello corrente
+    if (this.currentUserId !== userId) {
+      this.saveToStorage()
+      
+      // Cambia utente
+      this.currentUserId = userId
+      
+      // Carica il carrello del nuovo utente
+      this.loadFromStorage()
+      
+      // Se l'utente è loggato, sincronizza con il database
+      if (userId) {
+        await this.syncWithDatabase()
+      }
+    }
+  }
+
+  // Pulisce il carrello dell'utente corrente
+  clearUserCart() {
+    try {
+      const keys = this.getStorageKeys()
+      localStorage.removeItem(keys.cart)
+      localStorage.removeItem(keys.sync)
+      this.items = []
+      this.isSynced = false
+    } catch (error) {
+      console.error('Errore pulizia carrello:', error)
     }
   }
 

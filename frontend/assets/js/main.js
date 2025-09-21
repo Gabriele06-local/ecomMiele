@@ -71,10 +71,14 @@ async function initializeAuth() {
     const user = await getCurrentUser()
     if (user) {
       await handleUserLogin(user)
+    } else {
+      // Nessuna sessione attiva - imposta carrello anonimo
+      await cartService.setCurrentUser(null)
     }
   } catch (error) {
     // Nessuna sessione attiva - questo è normale per utenti non autenticati
     console.log('ℹ️ Nessuna sessione attiva - utente non autenticato')
+    await cartService.setCurrentUser(null)
   }
 }
 
@@ -100,8 +104,8 @@ async function handleUserLogin(user) {
     // Aggiorna la navbar con i dati del profilo
     updateNavbarForLoggedUser(user, profile)
     
-    // Sincronizza il carrello con il database
-    await cartService.syncWithDatabase()
+    // Imposta l'utente corrente nel carrello e sincronizza
+    await cartService.setCurrentUser(user.id)
     
     // Carica le preferenze utente
     await loadUserPreferences(user.id)
@@ -135,6 +139,9 @@ async function createUserProfile(user) {
 
 function handleUserLogout() {
   console.log('👤 Utente disconnesso')
+  
+  // Imposta carrello anonimo
+  cartService.setCurrentUser(null)
   
   // Aggiorna la navbar
   updateNavbarForLoggedOutUser()
