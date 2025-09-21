@@ -79,6 +79,25 @@ async function handleSignup(event) {
         
         if (data.user) {
             console.log('✅ Utente registrato con successo:', data.user.email)
+            
+            // Crea il profilo utente
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: data.user.id,
+                    first_name: userData.firstName,
+                    last_name: userData.lastName,
+                    phone: userData.phone || null,
+                    newsletter: userData.acceptNewsletter === 'on'
+                })
+            
+            if (profileError) {
+                console.error('❌ Errore creazione profilo:', profileError)
+                showNotification('Utente creato ma errore nel profilo. Contatta il supporto.', 'warning')
+            } else {
+                console.log('✅ Profilo utente creato con successo')
+            }
+            
             showNotification('Account creato con successo! Controlla la tua email per verificare l\'account.', 'success')
             
             // Reindirizza al login dopo 3 secondi
