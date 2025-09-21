@@ -82,8 +82,23 @@ async function handleUserLogin(user) {
   try {
     console.log('👤 Utente loggato:', user.email)
     
-    // Aggiorna la navbar
-    updateNavbarForLoggedUser(user)
+    // Carica il profilo utente dal database
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+    
+    if (error) {
+      console.warn('⚠️ Profilo non trovato, creazione automatica...')
+      // Crea il profilo se non esiste
+      await createUserProfile(user)
+    } else {
+      console.log('✅ Profilo caricato:', profile)
+    }
+    
+    // Aggiorna la navbar con i dati del profilo
+    updateNavbarForLoggedUser(user, profile)
     
     // Sincronizza il carrello con il database
     await cartService.syncWithDatabase()
@@ -93,6 +108,28 @@ async function handleUserLogin(user) {
     
   } catch (error) {
     console.error('Errore gestione login:', error)
+  }
+}
+
+async function createUserProfile(user) {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        first_name: user.user_metadata?.first_name || 'Nome',
+        last_name: user.user_metadata?.last_name || 'Cognome',
+        phone: user.user_metadata?.phone || null,
+        newsletter: user.user_metadata?.accept_newsletter || false
+      })
+    
+    if (error) {
+      console.error('❌ Errore creazione profilo:', error)
+    } else {
+      console.log('✅ Profilo creato automaticamente')
+    }
+  } catch (error) {
+    console.error('❌ Errore creazione profilo:', error)
   }
 }
 
@@ -153,7 +190,7 @@ function initializeNavbar() {
   }
 }
 
-function updateNavbarForLoggedUser(user) {
+function updateNavbarForLoggedUser(user, profile = null) {
   const navbarAuth = document.getElementById('navbarAuth')
   const navbarUser = document.getElementById('navbarUser')
   const userName = document.getElementById('userName')
@@ -161,7 +198,15 @@ function updateNavbarForLoggedUser(user) {
 
   if (navbarAuth) navbarAuth.style.display = 'none'
   if (navbarUser) navbarUser.style.display = 'block'
-  if (userName) userName.textContent = user.user_metadata?.first_name || user.email
+  
+  // Usa i dati del profilo se disponibili, altrimenti fallback ai metadati
+  if (userName) {
+    if (profile) {
+      userName.textContent = `${profile.first_name} ${profile.last_name}`
+    } else {
+      userName.textContent = user.user_metadata?.first_name || user.email
+    }
+  }
 
   // Verifica se l'utente è admin
   isUserAdmin().then(isAdmin => {
@@ -256,21 +301,20 @@ async function sendAIMessage() {
   chatbotInput.value = ''
 
   try {
-    // Invia il messaggio all'AI
-    const response = await fetch('/api/ai-assistant', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message })
+    // Invia il messaggio all'AI tramite Supabase Edge Function
+    const { data: aiResponse, error } = await supabase.functions.invoke('ai-assistant', {
+      body: { message }
     })
-
-    if (!response.ok) {
+    
+    if (error) {
+      throw new Error(error.message)
+    }
+    
+    if (!aiResponse) {
       throw new Error('Errore risposta AI')
     }
 
-    const data = await response.json()
-    addMessageToChat('assistant', data.response)
+    addMessageToChat('assistant', aiResponse.response || aiResponse.message || 'Risposta ricevuta')
   } catch (error) {
     console.error('Errore invio messaggio AI:', error)
     addMessageToChat('assistant', 'Mi dispiace, si è verificato un errore. Riprova più tardi.')

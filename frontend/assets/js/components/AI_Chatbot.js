@@ -2,7 +2,7 @@
 export class AIChatbot {
   constructor(options = {}) {
     this.options = {
-      endpoint: '/api/ai-assistant',
+      endpoint: 'ai-assistant', // Supabase Edge Function
       maxMessages: 50,
       autoScroll: true,
       placeholder: 'Chiedi qualcosa sui nostri mieli...',
