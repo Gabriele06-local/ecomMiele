@@ -84,8 +84,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('AI Assistant error:', error)
+    
+    // Assicurati che l'errore sia sempre una risposta CORS valida
     return createCorsResponse(
-      { success: false, error: 'Internal server error' },
+      { 
+        success: false, 
+        error: 'Il servizio AI è temporaneamente non disponibile. Riprova più tardi.',
+        details: error.message 
+      },
       500
     )
   }

@@ -318,21 +318,41 @@ async function sendAIMessage() {
   try {
     // Invia il messaggio all'AI tramite Supabase Edge Function
     const { data: aiResponse, error } = await supabase.functions.invoke('ai-assistant', {
-      body: { message }
+      body: { 
+        message,
+        context: {
+          page: window.location.pathname,
+          timestamp: new Date().toISOString()
+        }
+      }
     })
     
     if (error) {
+      console.error('Errore Edge Function:', error)
       throw new Error(error.message)
     }
     
-    if (!aiResponse) {
-      throw new Error('Errore risposta AI')
+    if (!aiResponse || !aiResponse.success) {
+      throw new Error(aiResponse?.error || 'Errore risposta AI')
     }
 
-    addMessageToChat('assistant', aiResponse.response || aiResponse.message || 'Risposta ricevuta')
+    addMessageToChat('assistant', aiResponse.data?.response || 'Risposta ricevuta')
   } catch (error) {
     console.error('Errore invio messaggio AI:', error)
-    addMessageToChat('assistant', 'Mi dispiace, si è verificato un errore. Riprova più tardi.')
+    
+    // Fallback con risposta predefinita basata sul messaggio
+    let fallbackResponse = 'Mi dispiace, il servizio AI è temporaneamente non disponibile. 🤖'
+    
+    const lowerMessage = message.toLowerCase()
+    if (lowerMessage.includes('miele')) {
+      fallbackResponse = 'Ti consiglio di dare un\'occhiata ai nostri mieli artigianali nella sezione Prodotti! 🍯'
+    } else if (lowerMessage.includes('carrello') || lowerMessage.includes('acquisto')) {
+      fallbackResponse = 'Puoi aggiungere prodotti al carrello e procedere con l\'acquisto dalla pagina Prodotti! 🛒'
+    } else if (lowerMessage.includes('spedizione')) {
+      fallbackResponse = 'Offriamo spedizione gratuita per ordini superiori a €50. Controlla i dettagli al checkout! 📦'
+    }
+    
+    addMessageToChat('assistant', fallbackResponse)
   }
 }
 
