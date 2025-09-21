@@ -10,8 +10,9 @@ const supabaseAnonKey = window.location.hostname === 'localhost'
   ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvYWducHltcHZqa2JxYnRtdG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTMyNDIsImV4cCI6MjA3NDAyOTI0Mn0.QROghbzXqTwweLnIQ1JIWVhNnraQ2sHV5MvbDlPLZtk'
   : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvYWducHltcHZqa2JxYnRtdG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTMyNDIsImV4cCI6MjA3NDAyOTI0Mn0.QROghbzXqTwweLnIQ1JIWVhNnraQ2sHV5MvbDlPLZtk'
 
-console.log('🔧 Supabase URL:', supabaseUrl)
-console.log('🔑 Supabase Key:', supabaseAnonKey.substring(0, 20) + '...')
+// Debug logs rimossi per sicurezza
+// console.log('🔧 Supabase URL:', supabaseUrl)
+// console.log('🔑 Supabase Key:', supabaseAnonKey.substring(0, 20) + '...')
 
 // Creazione del client Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
