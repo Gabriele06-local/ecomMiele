@@ -674,23 +674,7 @@ export async function getAdminCustomers(filters = {}) {
       return { success: false, error: profilesError.message }
     }
 
-    // Prova a ottenere le email dagli utenti auth (solo se hai permessi admin)
-    let emailMap = {}
-    try {
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
-      
-      // Crea una mappa delle email per ID utente
-      if (authUsers && authUsers.users && !authError) {
-        authUsers.users.forEach(user => {
-          emailMap[user.id] = user.email
-        })
-      }
-    } catch (adminError) {
-      console.log('Admin API non disponibile, uso fallback per email')
-      // Non è un errore critico, continua senza email
-    }
-
-    // Calcola statistiche per ogni cliente
+    // Calcola statistiche per ogni cliente (senza email per privacy)
     const customersWithStats = profilesData.map(customer => {
       const orders = customer.orders || []
       const completedOrders = orders.filter(order => order.status === 'completato')
@@ -700,58 +684,13 @@ export async function getAdminCustomers(filters = {}) {
         ...customer,
         orderCount: orders.length,
         totalSpent,
-        email: emailMap[customer.id] || 'Email non disponibile'
+        email: 'Privacy protetta' // Non mostriamo email per sicurezza
       }
     })
 
     return { success: true, data: customersWithStats }
   } catch (error) {
     console.error('Errore recupero clienti admin:', error)
-    // Se fallisce il recupero delle email, usa un fallback
-    if (error.message?.includes('admin')) {
-      // Fallback senza email reali
-      const profileQuery = supabase
-        .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          created_at,
-          loyalty_points,
-          orders (
-            id,
-            total_price,
-            status
-          )
-        `)
-        .order('created_at', { ascending: false })
-
-      if (filters.limit) {
-        profileQuery.limit(filters.limit)
-      }
-
-      if (filters.search) {
-        profileQuery.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%`)
-      }
-
-      const { data: fallbackData } = await profileQuery
-      
-      const customersWithStats = (fallbackData || []).map(customer => {
-        const orders = customer.orders || []
-        const completedOrders = orders.filter(order => order.status === 'completato')
-        const totalSpent = completedOrders.reduce((sum, order) => sum + order.total_price, 0)
-
-        return {
-          ...customer,
-          orderCount: orders.length,
-          totalSpent,
-          email: 'Email privata'
-        }
-      })
-
-      return { success: true, data: customersWithStats }
-    }
-    
     return { success: false, error: 'Errore di connessione' }
   }
 }

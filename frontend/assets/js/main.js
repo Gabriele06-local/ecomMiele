@@ -74,11 +74,13 @@ async function initializeAuth() {
     } else {
       // Nessuna sessione attiva - imposta carrello anonimo
       await cartService.setCurrentUser(null)
+      updateCartUI(cartService.getItemCount())
     }
   } catch (error) {
     // Nessuna sessione attiva - questo è normale per utenti non autenticati
     console.log('ℹ️ Nessuna sessione attiva - utente non autenticato')
     await cartService.setCurrentUser(null)
+    updateCartUI(cartService.getItemCount())
   }
 }
 
@@ -106,6 +108,9 @@ async function handleUserLogin(user) {
     
     // Imposta l'utente corrente nel carrello e sincronizza
     await cartService.setCurrentUser(user.id)
+    
+    // Aggiorna il contatore del carrello
+    updateCartUI(cartService.getItemCount())
     
     // Carica le preferenze utente
     await loadUserPreferences(user.id)
@@ -142,6 +147,9 @@ function handleUserLogout() {
   
   // Imposta carrello anonimo
   cartService.setCurrentUser(null)
+  
+  // Aggiorna il contatore del carrello
+  updateCartUI(cartService.getItemCount())
   
   // Aggiorna la navbar
   updateNavbarForLoggedOutUser()
