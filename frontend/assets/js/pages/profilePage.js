@@ -21,6 +21,9 @@ async function initializeProfilePage() {
         
         console.log('👤 Utente autenticato:', user.email)
         
+        // Salva l'utente corrente per le tab
+        currentUser = user
+        
         // Carica i dati del profilo
         await loadUserProfile(user)
         
@@ -35,6 +38,9 @@ async function initializeProfilePage() {
         
         // Configura i gestori di eventi
         setupEventListeners(user)
+        
+        // Inizializza la navigazione tra tab
+        initializeProfileNavigation()
         
     } catch (error) {
         console.error('❌ Errore inizializzazione profilo:', error)
@@ -353,7 +359,7 @@ function getOrderStatusClass(status) {
 }
 
 function updateOrdersUI(orders) {
-    const ordersContainer = document.querySelector('.recent-orders')
+    const ordersContainer = document.getElementById('recentOrders')
     if (!ordersContainer) return
     
     // Aggiorna il contatore degli ordini
@@ -393,7 +399,7 @@ function updateOrdersUI(orders) {
 }
 
 function updateReviewsUI(reviews) {
-    const reviewsContainer = document.querySelector('.recent-reviews')
+    const reviewsContainer = document.getElementById('recentReviews')
     if (!reviewsContainer) return
     
     // Aggiorna il contatore delle recensioni
@@ -619,9 +625,444 @@ function closeOrderDetailsModal() {
     }
 }
 
+// ===== NAVIGAZIONE TAB =====
+
+// Variabile globale per tenere traccia della tab corrente
+let currentTab = 'overview'
+let currentUser = null
+
+// Inizializza la navigazione tra tab
+function initializeProfileNavigation() {
+    const navItems = document.querySelectorAll('.profile-nav-item')
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const tabName = item.dataset.tab
+            switchProfileTab(tabName)
+        })
+    })
+    
+    console.log('✅ Navigazione profilo inizializzata')
+}
+
+// Cambia tab del profilo
+function switchProfileTab(tabName) {
+    console.log(`🔄 Cambio tab profilo: ${currentTab} -> ${tabName}`)
+    
+    // Aggiorna la navigazione
+    document.querySelectorAll('.profile-nav-item').forEach(item => {
+        item.classList.remove('active')
+    })
+    
+    const activeNavItem = document.querySelector(`[data-tab="${tabName}"]`)
+    if (activeNavItem) {
+        activeNavItem.classList.add('active')
+    }
+
+    // Aggiorna il contenuto
+    document.querySelectorAll('.profile-tab').forEach(tab => {
+        tab.classList.remove('active')
+    })
+    
+    const activeTab = document.getElementById(`${tabName}Tab`)
+    if (activeTab) {
+        activeTab.classList.add('active')
+    }
+
+    currentTab = tabName
+
+    // Carica i dati specifici della tab
+    loadProfileTabData(tabName)
+}
+
+// Carica i dati specifici della tab
+async function loadProfileTabData(tabName) {
+    if (!currentUser) return
+    
+    try {
+        switch (tabName) {
+            case 'overview':
+                // Già caricato nell'inizializzazione
+                break
+            case 'orders':
+                await loadAllUserOrders(currentUser.id)
+                break
+            case 'reviews':
+                await loadAllUserReviews(currentUser.id)
+                break
+            case 'wishlist':
+                await loadUserWishlist(currentUser.id)
+                break
+            case 'settings':
+                await loadUserSettings(currentUser.id)
+                break
+            case 'addresses':
+                await loadUserAddresses(currentUser.id)
+                break
+        }
+    } catch (error) {
+        console.error(`❌ Errore caricamento dati tab ${tabName}:`, error)
+    }
+}
+
+// Carica tutti gli ordini dell'utente (non solo gli ultimi 5)
+async function loadAllUserOrders(userId) {
+    const container = document.getElementById('ordersList')
+    if (!container) return
+    
+    container.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Caricamento ordini...</p>
+        </div>
+    `
+    
+    try {
+        const { data: orders, error } = await supabase
+            .from('orders')
+            .select(`
+                *,
+                order_items (
+                    *,
+                    products (
+                        name,
+                        image_url,
+                        price
+                    )
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+        
+        if (error) {
+            throw new Error(error.message)
+        }
+        
+        if (orders.length === 0) {
+            container.innerHTML = `
+                <div class="no-data-message">
+                    <i class="fas fa-shopping-bag"></i>
+                    <p>Non hai ancora effettuato ordini</p>
+                    <a href="product.html" class="btn btn-primary">Inizia a fare shopping</a>
+                </div>
+            `
+            return
+        }
+        
+        const ordersHTML = orders.map(order => {
+            const statusText = getOrderStatusText(order.status)
+            const statusClass = getOrderStatusClass(order.status)
+            const itemsCount = order.order_items?.length || 0
+            const orderDate = new Date(order.created_at).toLocaleDateString('it-IT')
+            
+            return `
+                <div class="order-item-full">
+                    <div class="order-header">
+                        <h4>Ordine #${order.order_number}</h4>
+                        <span class="order-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="order-info">
+                        <div class="order-meta">
+                            <span><strong>Data:</strong> ${orderDate}</span>
+                            <span><strong>Prodotti:</strong> ${itemsCount}</span>
+                            <span><strong>Totale:</strong> €${order.total_price.toFixed(2)}</span>
+                        </div>
+                        <div class="order-actions">
+                            <button class="btn btn-outline btn-small" onclick="viewOrderDetails('${order.id}')">
+                                <i class="fas fa-eye"></i> Dettagli
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+        }).join('')
+        
+        container.innerHTML = ordersHTML
+        
+    } catch (error) {
+        console.error('❌ Errore caricamento tutti gli ordini:', error)
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Errore caricamento ordini</span>
+            </div>
+        `
+    }
+}
+
+// Carica tutte le recensioni dell'utente
+async function loadAllUserReviews(userId) {
+    const container = document.getElementById('reviewsList')
+    if (!container) return
+    
+    container.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Caricamento recensioni...</p>
+        </div>
+    `
+    
+    try {
+        const { data: reviews, error } = await supabase
+            .from('reviews')
+            .select(`
+                *,
+                products (
+                    name,
+                    image_url
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+        
+        if (error) {
+            throw new Error(error.message)
+        }
+        
+        if (reviews.length === 0) {
+            container.innerHTML = `
+                <div class="no-data-message">
+                    <i class="fas fa-star"></i>
+                    <p>Non hai ancora scritto recensioni</p>
+                    <a href="product.html" class="btn btn-primary">Acquista e recensisci</a>
+                </div>
+            `
+            return
+        }
+        
+        const reviewsHTML = reviews.map(review => {
+            const rating = '★'.repeat(review.rating)
+            const emptyStars = '☆'.repeat(5 - review.rating)
+            const reviewDate = new Date(review.created_at).toLocaleDateString('it-IT')
+            const approvalStatus = review.is_approved ? 'Approvata' : 'In attesa di moderazione'
+            const approvalClass = review.is_approved ? 'approved' : 'pending'
+            
+            return `
+                <div class="review-item-full">
+                    <div class="review-header">
+                        <h4>${review.products?.name || 'Prodotto'}</h4>
+                        <div class="review-rating">${rating}${emptyStars}</div>
+                        <span class="review-status ${approvalClass}">${approvalStatus}</span>
+                    </div>
+                    <div class="review-content">
+                        <p>${review.comment || 'Nessun commento'}</p>
+                        <div class="review-meta">
+                            <span class="review-date">${reviewDate}</span>
+                        </div>
+                    </div>
+                </div>
+            `
+        }).join('')
+        
+        container.innerHTML = reviewsHTML
+        
+    } catch (error) {
+        console.error('❌ Errore caricamento tutte le recensioni:', error)
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Errore caricamento recensioni</span>
+            </div>
+        `
+    }
+}
+
+// Carica la lista desideri dell'utente (funzione che mancava nella logica tab)
+async function loadUserWishlist(userId) {
+    const container = document.getElementById('wishlistGrid')
+    if (!container) return
+    
+    container.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Caricamento lista desideri...</p>
+        </div>
+    `
+    
+    try {
+        const { data: wishlistItems, error } = await supabase
+            .from('wishlists')
+            .select(`
+                *,
+                products (
+                    id,
+                    name,
+                    price,
+                    image_url,
+                    stock,
+                    is_active
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+        
+        if (error) {
+            throw new Error(error.message)
+        }
+        
+        if (wishlistItems.length === 0) {
+            container.innerHTML = `
+                <div class="no-data-message">
+                    <i class="fas fa-heart"></i>
+                    <p>La tua lista desideri è vuota</p>
+                    <a href="product.html" class="btn btn-primary">Scopri i nostri prodotti</a>
+                </div>
+            `
+            return
+        }
+        
+        const wishlistHTML = wishlistItems.map(item => {
+            const product = item.products
+            if (!product || !product.is_active) return ''
+            
+            return `
+                <div class="wishlist-item">
+                    <img src="${product.image_url || 'assets/images/placeholder.jpg'}" 
+                         alt="${product.name}" class="wishlist-image">
+                    <div class="wishlist-info">
+                        <h4>${product.name}</h4>
+                        <p class="wishlist-price">€${product.price.toFixed(2)}</p>
+                        <div class="wishlist-actions">
+                            <button class="btn btn-primary btn-small" onclick="addToCartFromWishlist('${product.id}')">
+                                <i class="fas fa-shopping-cart"></i> Aggiungi al Carrello
+                            </button>
+                            <button class="btn btn-outline btn-small" onclick="removeFromWishlist('${item.id}')">
+                                <i class="fas fa-trash"></i> Rimuovi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+        }).filter(html => html).join('')
+        
+        container.innerHTML = wishlistHTML
+        
+    } catch (error) {
+        console.error('❌ Errore caricamento lista desideri:', error)
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Errore caricamento lista desideri</span>
+            </div>
+        `
+    }
+}
+
+// Carica le impostazioni utente
+async function loadUserSettings(userId) {
+    console.log('⚙️ Caricamento impostazioni utente:', userId)
+    // Implementa il caricamento delle impostazioni specifiche dell'utente
+}
+
+// Carica gli indirizzi dell'utente
+async function loadUserAddresses(userId) {
+    const container = document.getElementById('addressesList')
+    if (!container) return
+    
+    container.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Caricamento indirizzi...</p>
+        </div>
+    `
+    
+    try {
+        const { data: addresses, error } = await supabase
+            .from('addresses')
+            .select('*')
+            .eq('user_id', userId)
+            .order('is_default', { ascending: false })
+        
+        if (error) {
+            throw new Error(error.message)
+        }
+        
+        if (addresses.length === 0) {
+            container.innerHTML = `
+                <div class="no-data-message">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <p>Non hai ancora salvato indirizzi</p>
+                    <button class="btn btn-primary" onclick="addNewAddress()">
+                        <i class="fas fa-plus"></i> Aggiungi Indirizzo
+                    </button>
+                </div>
+            `
+            return
+        }
+        
+        const addressesHTML = addresses.map(address => `
+            <div class="address-item ${address.is_default ? 'default' : ''}">
+                <div class="address-header">
+                    <h4>${address.type === 'billing' ? 'Fatturazione' : 'Spedizione'}</h4>
+                    ${address.is_default ? '<span class="default-badge">Predefinito</span>' : ''}
+                </div>
+                <div class="address-content">
+                    <p><strong>${address.first_name} ${address.last_name}</strong></p>
+                    ${address.company ? `<p>${address.company}</p>` : ''}
+                    <p>${address.address_line_1}</p>
+                    ${address.address_line_2 ? `<p>${address.address_line_2}</p>` : ''}
+                    <p>${address.postal_code} ${address.city}</p>
+                    <p>${address.country}</p>
+                    ${address.phone ? `<p>Tel: ${address.phone}</p>` : ''}
+                </div>
+                <div class="address-actions">
+                    <button class="btn btn-outline btn-small" onclick="editAddress('${address.id}')">
+                        <i class="fas fa-edit"></i> Modifica
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="deleteAddress('${address.id}')">
+                        <i class="fas fa-trash"></i> Elimina
+                    </button>
+                </div>
+            </div>
+        `).join('')
+        
+        container.innerHTML = addressesHTML
+        
+    } catch (error) {
+        console.error('❌ Errore caricamento indirizzi:', error)
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Errore caricamento indirizzi</span>
+            </div>
+        `
+    }
+}
+
+// Funzioni placeholder per wishlist e indirizzi
+function addToCartFromWishlist(productId) {
+    console.log('🛒 Aggiungi al carrello dalla wishlist:', productId)
+    // Implementa l'aggiunta al carrello
+}
+
+function removeFromWishlist(wishlistId) {
+    console.log('💔 Rimuovi dalla wishlist:', wishlistId)
+    // Implementa la rimozione dalla wishlist
+}
+
+function addNewAddress() {
+    console.log('📍 Aggiungi nuovo indirizzo')
+    // Implementa l'aggiunta di un nuovo indirizzo
+}
+
+function editAddress(addressId) {
+    console.log('✏️ Modifica indirizzo:', addressId)
+    // Implementa la modifica dell'indirizzo
+}
+
+function deleteAddress(addressId) {
+    console.log('🗑️ Elimina indirizzo:', addressId)
+    // Implementa l'eliminazione dell'indirizzo
+}
+
 // Rendi le funzioni disponibili globalmente
 window.viewOrderDetails = viewOrderDetails
 window.closeOrderDetailsModal = closeOrderDetailsModal
+window.addToCartFromWishlist = addToCartFromWishlist
+window.removeFromWishlist = removeFromWishlist
+window.addNewAddress = addNewAddress
+window.editAddress = editAddress
+window.deleteAddress = deleteAddress
 
 // Esporta funzioni per uso esterno
 export { loadUserProfile, loadUserOrders, loadUserReviews }
